@@ -14,7 +14,7 @@
 \setlength{\textwidth}{16cm}
 \setlength{\textheight}{22cm}
 
-\title{\Huge\textbf{Título do Trabalho}\linebreak\linebreak\linebreak
+\title{\Huge\textbf{Nodes}\linebreak\linebreak\linebreak
 \Large\textbf{Relatório Intercalar}\linebreak\linebreak
 \linebreak\linebreak
 \includegraphics[scale=0.1]{feup-logo.png}\linebreak\linebreak
@@ -126,11 +126,21 @@ Nodes is a board game of abstract strategy, created by The Game Crafter and desi
 Lines of communication are the basis of the movement. Each node emits a line of communication along each road and conduit that surrounds it. All lines of communication are available in every player's turn, even if they are being emited by another player's node. 
 
 
+\subsubsection{Unit Movements}
 
-\subsubsection{}
+Units can move through communication lines util the player decides to finish its turn. They cannot move through conduits.
+Relay and Interception?
 
-\subsubsection{}
 
+
+\subsubsection{How to play}
+Each turn has three stages. The first one consists in visualizing the line of communication and determine which units can move. Then, the player moves each unit to the desired position (if possible).
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.5\textwidth]{signallines.jpg}
+	\caption{In green, the communication Lines. Units with a cricle can move. Units with a cross cannot.}
+	\label{Image: signallines}
+\end{figure}
 
 
 %Descrever detalhadamente o jogo, a sua história e, principalmente, as suas regras.
