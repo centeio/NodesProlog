@@ -59,3 +59,17 @@ displayBoard(X) :-
         write('             ___ ___ ___ ___ ___'),
         nl,
         displayBoardAux(X).
+
+init.
+play.
+finish.
+showResult.
+
+
+match :-
+        init,
+        repeat,
+                play,
+                finish,
+        showResult.
+
