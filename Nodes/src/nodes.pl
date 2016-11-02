@@ -1,4 +1,6 @@
 :-use_module(library(lists)).
+:- include('interface.pl').
+:- include('utilities.pl').
 
 board([
         [null, null, roofL, empty, empty, empty, empty, empty, roofR, null, null],
@@ -12,64 +14,41 @@ board([
         [null, null, roofLM, empty, empty, empty, empty, empty, null, null, null]
        ]).
 
-translateContent(null, '    ').
-translateContent(empty, '   |').
-translateContent(unit1, ' x |').
-translateContent(unit2, ' o |').
-translateContent(node1, ' 1 |').
-translateContent(node2, ' 2 |').
-translateContent(roofL, '    |').
-translateContent(roofLM, '    |').
-translateContent(roofR, '').
 
-translateBottom(null, '    ').
-translateBottom(X, '___|') :-
-        member(X, [empty, unit1, unit2, node1, node2]).
-translateBottom(roofL, ' ___|').
-translateBottom(roofLM, '    |').
-translateBottom(roofR, '___').
+translateChoice(1, hh).
+translateChoice(2, hc).
+translateChoice(3, cc).
 
-displayLineBottom([]) :-
-        write('').
-
-displayLineBottom([E1|Es]) :-
-        translateBottom(E1, V),
-        write(V),
-        displayLineBottom(Es).
-
-displayLine([]) :-
-        write('').
-
-displayLine([E1|Es]) :-
-        translateContent(E1, V),
-        write(V),
-        displayLine(Es).    
-
-displayBoardAux([]) :-
-        displayLine([]).
-
-displayBoardAux([L1|Ls]):-
-        displayLine(L1),
-        nl,
-        displayLineBottom(L1),
-        nl,
-        displayBoardAux(Ls).
-
-displayBoard(X) :-
-        write('             ___ ___ ___ ___ ___'),
-        nl,
-        displayBoardAux(X).
-
-init.
+init(Type) :-
+        repeat,
+                mainMenu,
+                read(Choice),
+                (Choice =:= 1; Choice =:= 2; Choice =:= 3),
+        !,
+        translateChoice(Choice, Type).
 play.
 finish.
 showResult.
 
+play(Type) :-
+        type(Type),
+        Type == hh -> playHH;
+        Type == hc -> playHC;
+        Type == cc -> playCC.
+
+playHH :-
+        write('HH').
+
+playHC :- 
+        write('HC').
+
+playCC :- 
+        write('CC').
+
 
 match :-
-        init,
+        init(Type),
         repeat,
-                play,
+                play(Type),
                 finish,
         showResult.
-
