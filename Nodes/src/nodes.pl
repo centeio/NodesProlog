@@ -175,3 +175,29 @@ match :-
                 play(Type),
                 finish,
         showResult.
+
+
+diagonals(Piece,Row,Column,Board):-
+        diagonal(Piece,Board,Row,Column,inc,inc);
+        diagonal(Piece,Board,Row,Column,inc,dec);
+        diagonal(Piece,Board,Row,Column,dec,inc);
+        diagonal(Piece,Board,Row,Column,dec,dec).
+
+diagonal(_,_,0,_,_,_).
+
+diagonal(Piece,Board,NewBoard,Row,Column,VRow,VColumn):-
+        Row>0,
+        Row<10,
+        Column>0,
+        Column<10,
+        setPiece(Row,Column,Piece,Board,NewBoard),
+        VRow == inc ->
+        Row is Row + 1;
+        VRow == dec ->
+        Row is Row - 1;
+        VColumn == inc ->
+        Column is Column + 1;
+        VColumn == inc ->
+        Column is Column + 1,
+        diagonal(Piece,Board,NewBoard,Row,Column,VRow,VColumn).
+
