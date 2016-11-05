@@ -7,10 +7,12 @@ translateContent(node2, ' 2 |').
 translateContent(roofL, '    |').
 translateContent(roofLM, '    |').
 translateContent(roofR, '').
+translateContent(l1, 'l1 |').
+translateContent(l2, 'l2 |').
 
 translateBottom(null, '    ').
 translateBottom(X, '___|') :-
-        member(X, [empty, unit1, unit2, node1, node2]).
+        member(X, [empty, unit1, unit2, node1, node2, l1, l2]).
 translateBottom(roofL, ' ___|').
 translateBottom(roofLM, '    |').
 translateBottom(roofR, '___').
