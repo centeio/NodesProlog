@@ -28,6 +28,8 @@ lineBoard([
 
 player1(p1).
 player2(p2).
+line1(l1).
+line2(l2).
 
 init(Type) :-
         repeat,
@@ -129,6 +131,33 @@ move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece) :-
         setCell(Row, Column, empty, Board, NewBoard),
         setCell(NewRow, NewColumn, Piece, Board, NewBoard).
 
+updateLineBoard(Player, Piece, Row, Column, Board, NewBoard) :-
+        Player == p1 ->
+                line1(Piece);
+                line2(Piece),
+        diagonal(Piece, Board, NewBoard, Row, Column, inc, inc);
+        diagonal(Piece, Board, NewBoard, Row, Column, inc, dec);
+        diagonal(Piece, Board, NewBoard, Row, Column, dec, inc);
+        diagonal(Piece, Board, NewBoard, Row, Column, dec, dec).
+
+diagonal(_, _, 0, _, _, _).
+
+diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn):-
+        Row > 0,
+        Row < 10,
+        Column > 0,
+        Column < 10,
+        setCell(Row, Column, Piece, Board, NewBoard),
+        VRow == inc ->
+        Row is Row + 1;
+        VRow == dec ->
+        Row is Row - 1;
+        VColumn == inc ->
+        Column is Column + 1;
+        VColumn == inc ->
+        Column is Column + 1,
+        diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn).
+
 nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard) :-
         repeat,
                repeat,
@@ -146,7 +175,7 @@ nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard) :-
                 validateMove(Row, Column, NewRow, NewColumn, LineBoard) ->
                         move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece),
                 finishMove(Piece),
-         updateLineBoard(LineBoard, NewLineBoard).
+         updateLineBoard(Player, NewRow, NewColumn, LineBoard, NewLineBoard).
 
 play(Type) :-
         Type =:= 1 -> playHH;
@@ -175,29 +204,3 @@ match :-
                 play(Type),
                 finish,
         showResult.
-
-
-diagonals(Piece,Row,Column,Board):-
-        diagonal(Piece,Board,Row,Column,inc,inc);
-        diagonal(Piece,Board,Row,Column,inc,dec);
-        diagonal(Piece,Board,Row,Column,dec,inc);
-        diagonal(Piece,Board,Row,Column,dec,dec).
-
-diagonal(_,_,0,_,_,_).
-
-diagonal(Piece,Board,NewBoard,Row,Column,VRow,VColumn):-
-        Row>0,
-        Row<10,
-        Column>0,
-        Column<10,
-        setPiece(Row,Column,Piece,Board,NewBoard),
-        VRow == inc ->
-        Row is Row + 1;
-        VRow == dec ->
-        Row is Row - 1;
-        VColumn == inc ->
-        Column is Column + 1;
-        VColumn == inc ->
-        Column is Column + 1,
-        diagonal(Piece,Board,NewBoard,Row,Column,VRow,VColumn).
-
