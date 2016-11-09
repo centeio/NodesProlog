@@ -36,13 +36,13 @@ init(Type) :-
                 mainMenu,
                 read(Type),
                 (Type == 1; Type == 2; Type == 3),
-                player1(Player),
                 board(Board),
                 lineBoard(LineBoard),
-                assert(state(Player, Board, LineBoard)),
+                assert(state(Board, LineBoard)),
+                assert(player(p1)),
         !.
-play.
-finish.
+
+finish :- 2 is 1.
 showResult.
 
 validatePiece(p1, node1).
@@ -148,7 +148,7 @@ move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece) :-
         write('Move valid.'), nl,
         setCell(Row, Column, empty, Board, NewBoardTemp),
         write('Set empty.'), nl,
-        displayBoard(NewBoard), nl,
+        displayBoard(NewBoardTemp), nl,
         write(Piece), nl,
         write(NewRow), nl,
         write(NewColumn), nl,
@@ -185,6 +185,7 @@ diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn):-
 
 readMove(Player, Board, Piece, Row, Column) :-
         repeat,
+                displayBoard(Board),
                 write('Row: '),
                 read(Row), nl,
                 write('Column: '),
@@ -195,8 +196,9 @@ readMove(Player, Board, Piece, Row, Column) :-
                 getPiece(Player, Board, Row, Column, Piece),
                 !.
 
-nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard) :-
+nextMove(Player) :-
         repeat,
+                retract(state(Board, _)),
                 readMove(Player, Board, Piece, Row, Column),
                 write('Where to'), nl,
                 write('Row: '),
@@ -207,8 +209,10 @@ nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard) :-
                 NewColumn is TempNewColumn + 1,
                 /*validateMove(Row, Column, NewRow, NewColumn, LineBoard) ->*/
                 move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece),
+                assert(state(NewBoard, _)),
                 finishMove(Piece),
-         updateLineBoard(Player, NewRow, NewColumn, LineBoard, NewLineBoard).
+                /*updateLineBoard(Player, NewRow, NewColumn, LineBoard, NewLineBoard), */
+                !.
 
 play(Type) :-
         Type =:= 1 -> playHH;
@@ -217,11 +221,11 @@ play(Type) :-
 
 playHH :-
         repeat,
-                retract(state(Player, Board, LineBoard)),
-                displayBoard(Board),
-                nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard),
+                retract(player(Player)),
+                write('After player rectract'), nl,
+                nextMove(Player),
                 nextPlayer(Player, Next),
-                assert(state(Next, NewBoard, NewLineBoard)),
+                assert(player(Next)),
                 finish.
 
 playHC :- 
@@ -245,9 +249,9 @@ cleanBoard([E1|Es],Piece,Row,Column,[H|T]) :-
 cleanLine([Piece|T], Piece, [empty|NewTail]) :-
         cleanLine(T, Piece, NewTail).
 
-cleanLine([E1|Es],Piece,Row,Column,Board,NewBoard):-
+/*cleanLine([E1|Es],Piece,Row,Column,Board,NewBoard):-
         E1 == Piece ->
         E1 is empty,
-        cleanLine(Es,Piece,Row,Column-1,Board,NewBoard).
+        cleanLine(Es,Piece,Row,Column-1,Board,NewBoard).*/
         
         
