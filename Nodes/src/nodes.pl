@@ -237,3 +237,17 @@ match :-
                 play(Type),
                 finish,
         showResult.
+
+cleanBoard([E1|Es],Piece,Row,Column,[H|T]) :-
+        cleanLine(E1,Piece,Row,Column,H),
+        cleanBoard(Es,Piece,Row+1,Column,T).
+
+cleanLine([Piece|T], Piece, [empty|NewTail]) :-
+        cleanLine(T, Piece, NewTail).
+
+cleanLine([E1|Es],Piece,Row,Column,Board,NewBoard):-
+        E1 == Piece ->
+        E1 is empty,
+        cleanLine(Es,Piece,Row,Column-1,Board,NewBoard).
+        
+        
