@@ -60,36 +60,45 @@ checkPosition(Row, Column) :-
         Row > 0,
         Row < 4,
         Column > 3 - Row,
-        Column < 10 - (3 - Row).
+        Column < 10 - (3 - Row), 
+        !.
 
 checkPosition(Row, Column) :-
         Row > 3,
         Row < 8,
         Column > 0,
-        Column < 10.
+        Column < 10,
+        !.
 
 checkPosition(Row, Column) :-
         Row > 7,
         Row < 10,
         Column > Row - 7,
-        Column < 9 + (8 - Row).
+        Column < 9 + (8 - Row),
+        !.
 
-getCommunication([H|_], 0, Column, Piece) :-
-        nth1(Column, H, Piece).
+getCommunication([H|_], 1, Column, Piece) :-
+        Column > 0,
+        Column < 10,
+        nth1(Column, H, Piece), !.
 
 getCommunication([_|T], Row, Column, Piece) :-
-        Row > 0,
-        Row is Row - 1,
-        getCommunication(T, Row, Column, Piece).
+        write(Row), nl,
+        write(Column), nl,
+        Row > 1,
+        TempRow is Row - 1,
+        getCommunication(T, TempRow, Column, Piece), !.
 
-getPiece(Player, [H|_], 0, Column, Piece) :-
+getPiece(Player, [H|_], 1, Column, Piece) :-
         nth1(Column, H, Piece),
+        write('Piece: '),
+        write(Piece), nl,
         validatePiece(Player, Piece).
 
 getPiece(Player, [_|T], Row, Column, Piece) :-
-        Row > 0,
-        Row is Row - 1,
-        getPiece(Player, T, Row, Column, Piece).
+        Row > 1,
+        TempRow is Row - 1,
+        getPiece(Player, T, TempRow, Column, Piece).
 
 validateMove(Row, Column, Row, Column, _).
 
@@ -97,39 +106,55 @@ validateMove(Row, Column, NewRow, NewColumn, LineBoard) :-
         TempRow is Row - 1,
         getCommunication(LineBoard, TempRow, Column, Piece),
         (Piece == 'l1'; Piece == 'l2') ->
+                write('Baixo'), nl,
                 validateMove(TempRow, Column, NewRow, NewColumn, LineBoard);
         TempRow is Row + 1,
         getCommunication(LineBoard, TempRow, Column, Piece),
         (Piece == 'l1'; Piece == 'l2') ->
+                write('Cima'), nl,
                 validateMove(TempRow, Column, NewRow, NewColumn, LineBoard);
         TempColumn is Column - 1,
         getCommunication(LineBoard, Row, TempColumn, Piece),
         (Piece == 'l1'; Piece == 'l2') ->
+                write('Esquerda'), nl,
                 validateMove(Row, TempColumn, NewRow, NewColumn, LineBoard);
         TempColumn is Column + 1,
         getCommunication(LineBoard, Row, TempColumn, Piece),
         (Piece == 'l1'; Piece == 'l2') ->
+                write('Direita'), nl,
                 validateMove(Row, TempColumn, NewRow, NewColumn, LineBoard).
 
-setCellLine(0, Piece, [_|T], [Piece|T]).
+setCellLine(1, Piece, [_|T], [Piece|T]).
 
 setCellLine(Column, Piece, [H|T], [H|NewT]) :-
-        Column > 0,
-        Column is Column - 1,
-        setCellLine(Column, Piece, T, NewT).   
+        Column > 1,
+        TempColumn is Column - 1,
+        setCellLine(TempColumn, Piece, T, NewT).   
 
-setCell(0, Column, Piece, [H|T], [NewHead|T]) :-
+setCell(1, Column, Piece, [H|T], [NewHead|T]) :-
         setCellLine(Column, Piece, H, NewHead).
         
 setCell(Row, Column, Piece, [H|T], [H|NewT]) :-
-        Row > 0,
-        Row is Row - 1, 
-        setCell(Row, Column, Piece, T, NewT).
+        write('Set Cell'), nl,
+        write(Row), nl,
+        write(Column), nl,
+        Row > 1,
+        TempRow is Row - 1, 
+        write(TempRow), nl,
+        write(Column), nl,
+        setCell(TempRow, Column, Piece, T, NewT).
 
 move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece) :-
-        NewBoard is Board,
-        setCell(Row, Column, empty, Board, NewBoard),
-        setCell(NewRow, NewColumn, Piece, Board, NewBoard).
+        write('Move valid.'), nl,
+        setCell(Row, Column, empty, Board, NewBoardTemp),
+        write('Set empty.'), nl,
+        displayBoard(NewBoard), nl,
+        write(Piece), nl,
+        write(NewRow), nl,
+        write(NewColumn), nl,
+        setCell(NewRow, NewColumn, Piece, NewBoardTemp, NewBoard),
+        write('Set Piece.'), nl,
+        displayBoard(NewBoard), nl.
 
 updateLineBoard(Player, Piece, Row, Column, Board, NewBoard) :-
         Player == p1 ->
@@ -158,22 +183,30 @@ diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn):-
         Column is Column + 1,
         diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn).
 
+readMove(Player, Board, Piece, Row, Column) :-
+        repeat,
+                write('Row: '),
+                read(Row), nl,
+                write('Column: '),
+                read(TempColumn), nl,
+                checkPosition(Row, TempColumn),
+                Column is TempColumn + 1,
+                write('Position valid.'), nl,
+                getPiece(Player, Board, Row, Column, Piece),
+                !.
+
 nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard) :-
         repeat,
-               repeat,
-                        write('Row: '),
-                        read(Row), nl,
-                        write('Column: '),
-                        read(Column), nl,
-                        checkPosition(Row, Column),
-                        getPiece(Player, Board, Row, Column, Piece),
+                readMove(Player, Board, Piece, Row, Column),
                 write('Where to'), nl,
-                write('Row'), nl,
-                read(NewRow),
-                write('Column'), nl,
-                read(NewColumn),
-                validateMove(Row, Column, NewRow, NewColumn, LineBoard) ->
-                        move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece),
+                write('Row: '),
+                read(NewRow), nl,
+                write('Column: '),
+                read(TempNewColumn), nl,
+                checkPosition(NewRow, TempNewColumn),
+                NewColumn is TempNewColumn + 1,
+                /*validateMove(Row, Column, NewRow, NewColumn, LineBoard) ->*/
+                move(Row, Column, NewRow, NewColumn, Board, NewBoard, Piece),
                 finishMove(Piece),
          updateLineBoard(Player, NewRow, NewColumn, LineBoard, NewLineBoard).
 
@@ -185,7 +218,7 @@ play(Type) :-
 playHH :-
         repeat,
                 retract(state(Player, Board, LineBoard)),
-                displayBoard(board),
+                displayBoard(Board),
                 nextMove(Player, Board, NewBoard, LineBoard, NewLineBoard),
                 nextPlayer(Player, Next),
                 assert(state(Next, NewBoard, NewLineBoard)),
