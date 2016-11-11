@@ -28,8 +28,12 @@ lineBoard([
 
 player1(p1).
 player2(p2).
-line1(l1).
-line2(l2).
+
+unitPlayer(p1,unit1).
+unitPlayer(p2,unit2).
+
+nodePlayer(p1,node1).
+nodePlayer(p2,node2).
 
 init(Type) :-
         repeat,
@@ -266,5 +270,13 @@ cleanLine([Piece|T], Piece, [empty|NewTail]) :-
         E1 == Piece ->
         E1 is empty,
         cleanLine(Es,Piece,Row,Column-1,Board,NewBoard).*/
-        
-        
+
+finish(Player, Board):-
+        nextPlayer(Player,Next),
+        node(Next,Node),
+        getPiece(Board,Row,Column,Node),
+        unitPlayer(Player,Piece),
+        getPiece(Board, Row-1, Column-1, Piece),
+        getPiece(Board, Row+1, Column-1, Piece),
+        getPiece(Board, Row-1, Column+1, Piece),
+        getPiece(Board, Row+1, Column+1, Piece).
