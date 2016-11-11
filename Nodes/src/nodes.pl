@@ -50,8 +50,8 @@ validatePiece(p1, unit1).
 validatePiece(p2, node2).
 validatePiece(p2, unit2).
 
-finishMove(node1).
-finishMove(node2).
+node(node1).
+node(node2).
 
 nextPlayer(p1, p2).
 nextPlayer(p2, p1).
@@ -139,38 +139,65 @@ validateMove(Row, Column, NewRow, NewColumn, Board, LineBoard) :-
                 setCell(Row, TempColumn, l, LineBoard, TempLineBoard),
                 validateMove(Row, TempColumn, NewRow, NewColumn, Board, TempLineBoard).
 
-move(Row, Column, NewRow, NewColumn, Board, NewBoard, LineBoard, Piece) :-
+
+newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn) :-
+        /*UP*/
+        (VRow == static, VColumn == dec) ->
+                NewRow is Row,
+                NewColumn is Column - 1;
+        /*DOWN*/
+        (VRow == static, VColumn == inc) ->
+                NewRow is Row,
+                NewColumn is Column + 1;
+        
+
+line(_, _, 0, _, _, _).
+
+line(Piece, Row, Column, LineBoard, NewLineBoard, VRow, VColumn):-
+        checkPosition(Row, Column),
+        setCell(Row, Column, Piece, LineBoard, NewLineBoard),
+        newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn),
+        line(Piece, NewRow, NewColumn, LineBoard, NewLineBoard, VRow, VColumn).
+
+updateLineBoardAux(Piece, Row, Column, LineBoard, NewLineBoard) :-
+        /*UP row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, static, dec);
+        /*DOWN row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, static, inc);
+        /*LEFT row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, static);
+        /*RIGHT row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, static);
+        /*NORTHWEST row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, dec);
+        /*SOUTHWEST row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, inc);
+        /*NORTHEAST row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, dec);
+        /*SOUTHEAST row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, inc).
+
+updateLineBoard(p1, Row, Column, LineBoard, NewLineBoard) :-
+        updateLineBoardAux(l1, Row, Column, LineBoard, NewLineBoard).
+
+updateLineBoard(p2, Row, Column, LineBoard, NewLineBoard) :-
+        updateLineBoardAux(l2, Row, Column, LineBoard, NewLineBoard).
+
+finishMove(Player, Piece, Row, Column, NewBoard, LineBoard) :-
+        node(Piece) ->
+                updateLineBoard(Player, Row, Column, LineBoard, NewLineBoard),
+                assert(state(NewBoard, NewLineBoard)),
+                assert(nodePosition(NewBoard, Row, Column));
+        assert(state(NewBoard, LineBoard)),
+        fail.
+
+move(Player, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
         validateMove(Row, Column, NewRow, NewColumn, Board, LineBoard) ->
                 setCell(Row, Column, empty, Board, NewBoardTemp),
-                setCell(NewRow, NewColumn, Piece, NewBoardTemp, NewBoard);
-        assert(state(Board, LineBoard)).
-
-updateLineBoard(Player, Piece, Row, Column, Board, NewBoard) :-
-        Player == p1 ->
-                line1(Piece);
-                line2(Piece),
-        diagonal(Piece, Board, NewBoard, Row, Column, inc, inc);
-        diagonal(Piece, Board, NewBoard, Row, Column, inc, dec);
-        diagonal(Piece, Board, NewBoard, Row, Column, dec, inc);
-        diagonal(Piece, Board, NewBoard, Row, Column, dec, dec).
-
-diagonal(_, _, 0, _, _, _).
-
-diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn):-
-        Row > 0,
-        Row < 10,
-        Column > 0,
-        Column < 10,
-        setCell(Row, Column, Piece, Board, NewBoard),
-        VRow == inc ->
-        Row is Row + 1;
-        VRow == dec ->
-        Row is Row - 1;
-        VColumn == inc ->
-        Column is Column + 1;
-        VColumn == inc ->
-        Column is Column + 1,
-        diagonal(Piece, Board, NewBoard, Row, Column, VRow, VColumn).
+                setCell(NewRow, NewColumn, Piece, NewBoardTemp, NewBoard),
+                finishMove(Player, Piece, NewRow, NewColumn, NewBoard, LineBoard);
+        assert(state(Board, LineBoard)),
+        fail.
 
 readMove(Player, Board, LineBoard, Piece, Row, Column) :-
         repeat,
@@ -196,10 +223,7 @@ nextMove(Player) :-
                 read(TempNewColumn), nl,
                 checkPosition(NewRow, TempNewColumn),
                 NewColumn is TempNewColumn + 1,
-                move(Row, Column, NewRow, NewColumn, Board, NewBoard, LineBoard, Piece),
-                assert(state(NewBoard, LineBoard)),
-                finishMove(Piece),
-                /*updateLineBoard(Player, NewRow, NewColumn, LineBoard, NewLineBoard), */
+                move(Player, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece),
                 !.
 
 play(Type) :-
@@ -212,9 +236,10 @@ playHH :-
                 retract(player(Player)), nl,
                 write('Player: '), write(Player), nl, nl,
                 nextMove(Player),
+                retract(nodePosition(Board, NodeRow, NodeColumn)),
                 nextPlayer(Player, Next),
                 assert(player(Next)),
-                finish.
+                finish(Board, NodeRow, NodeColumn).
 
 playHC :- 
         write('HC').
