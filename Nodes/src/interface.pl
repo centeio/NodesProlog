@@ -6,7 +6,7 @@ translateContent(node1, ' 1 |').
 translateContent(node2, ' 2 |').
 translateContent(roofL, '    |').
 translateContent(roofLM, '    |').
-translateContent(roofR, '').
+translateContent(roofR, '    ').
 translateContent(l1, 'l1 |').
 translateContent(l2, 'l2 |').
 
@@ -15,7 +15,7 @@ translateBottom(X, '___|') :-
         member(X, [empty, unit1, unit2, node1, node2, l1, l2]).
 translateBottom(roofL, ' ___|').
 translateBottom(roofLM, '    |').
-translateBottom(roofR, '___').
+translateBottom(roofR, '___ ').
 
 displayLineBottom([]) :-
         write('').
@@ -33,20 +33,28 @@ displayLine([E1|Es]) :-
         write(V),
         displayLine(Es).    
 
-displayBoardAux([]) :-
+displayBoardAux([], [], _) :-
         displayLine([]).
 
-displayBoardAux([L1|Ls]):-
+displayBoardAux([L1|Ls], [K1|Ks], Counter):-
+        write(Counter),
         displayLine(L1),
+        write(Counter),
+        displayLine(K1),
         nl,
+        write(' '),
         displayLineBottom(L1),
+        write(' '),
+        displayLineBottom(K1),
         nl,
-        displayBoardAux(Ls).
+        Next is Counter + 1,
+        displayBoardAux(Ls, Ks, Next).
 
-displayBoard(X) :-
-        write('             ___ ___ ___ ___ ___'),
+displayBoard(X, Y) :-
+        write('       1   2   3   4   5   6   7   8   9             1   2   3   4   5   6   7   8   9  '), nl, 
+        write('              ___ ___ ___ ___ ___                           ___ ___ ___ ___ ___'),
         nl,
-        displayBoardAux(X).
+        displayBoardAux(X, Y, 1).
 
 mainMenu :-
         write('****************************************'), nl,
