@@ -28,8 +28,6 @@ lineBoard([
 
 player1(p1).
 player2(p2).
-line1(l1).
-line2(l2).
 
 init(Type) :-
         repeat,
@@ -142,16 +140,39 @@ validateMove(Row, Column, NewRow, NewColumn, Board, LineBoard) :-
 
 newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn) :-
         /*UP*/
-        (VRow == static, VColumn == dec) ->
-                NewRow is Row,
-                NewColumn is Column - 1;
+        (VRow == dec, VColumn == static) ->
+                NewRow is Row - 1,
+                NewColumn is Column;
         /*DOWN*/
+        (VRow == inc, VColumn == static) ->
+                NewRow is Row + 1,
+                NewColumn is Column;
+        /*LEFT*/
         (VRow == static, VColumn == inc) ->
                 NewRow is Row,
                 NewColumn is Column + 1;
-        
+        /*RIGHT*/
+        (VRow == inc, VColumn == static) ->
+                NewRow is Row,
+                NewColumn is Column - 1;
+        /*NORTHWEST*/
+        (VRow == dec, VColumn == dec) ->
+                NewRow is Row - 1,
+                NewColumn is Column - 1;
+        /*SOUTHWEST*/
+        (VRow == inc, VColumn == dec) ->
+                NewRow is Row + 1,
+                NewColumn is Column - 1;
+        /*NORTHEAST*/
+        (VRow == dec, VColumn == inc) ->
+                NewRow is Row - 1,
+                NewColumn is Column + 1;
+        /*SOUTHEAST*/
+        (VRow == inc, VColumn == inc) ->
+                NewRow is Row + 1,
+                NewColumn is Column + 1.
 
-line(_, _, 0, _, _, _).
+line(_,0,0,_,_,_,_).
 
 line(Piece, Row, Column, LineBoard, NewLineBoard, VRow, VColumn):-
         checkPosition(Row, Column),
@@ -161,21 +182,22 @@ line(Piece, Row, Column, LineBoard, NewLineBoard, VRow, VColumn):-
 
 updateLineBoardAux(Piece, Row, Column, LineBoard, NewLineBoard) :-
         /*UP row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, static, dec);
-        /*DOWN row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, static, inc);
-        /*LEFT row*/
         line(Piece, Row, Column, LineBoard, NewLineBoard, dec, static);
-        /*RIGHT row*/
+        /*DOWN row*/
         line(Piece, Row, Column, LineBoard, NewLineBoard, inc, static);
+        /*LEFT row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, static, dec);
+        /*RIGHT row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, static, inc);
         /*NORTHWEST row*/
         line(Piece, Row, Column, LineBoard, NewLineBoard, dec, dec);
         /*SOUTHWEST row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, inc);
-        /*NORTHEAST row*/
         line(Piece, Row, Column, LineBoard, NewLineBoard, inc, dec);
+        /*NORTHEAST row*/
+        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, inc);
         /*SOUTHEAST row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, inc).
+        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, inc);
+        1 is 1.
 
 updateLineBoard(p1, Row, Column, LineBoard, NewLineBoard) :-
         updateLineBoardAux(l1, Row, Column, LineBoard, NewLineBoard).
@@ -183,12 +205,32 @@ updateLineBoard(p1, Row, Column, LineBoard, NewLineBoard) :-
 updateLineBoard(p2, Row, Column, LineBoard, NewLineBoard) :-
         updateLineBoardAux(l2, Row, Column, LineBoard, NewLineBoard).
 
+cleanLine([], _, _). 
+
+cleanLine([Piece|T], Piece, [empty|NewTail]) :-
+        cleanLine(T, Piece, NewTail).
+
+cleanLine([H|T], Piece, [H|NewTail]) :-
+        cleanLine(T, Piece, NewTail).
+
+cleanBoard([], _, _). 
+
+cleanBoard([E1|Es], p1, [H|T]) :-
+        cleanLine(E1, l1, H),
+        cleanBoard(Es, p1, T).
+
+cleanBoard([E1|Es], p2, [H|T]) :-
+        cleanLine(E1, l2, H),
+        cleanBoard(Es, p2, T).
+
 finishMove(Player, Piece, Row, Column, NewBoard, LineBoard) :-
         node(Piece) ->
-                updateLineBoard(Player, Row, Column, LineBoard, NewLineBoard),
+                cleanBoard(LineBoard, Player, NewTempLineBoard),
+                updateLineBoard(Player, Row, Column, NewTempLineBoard, NewLineBoard),
                 assert(state(NewBoard, NewLineBoard)),
                 assert(nodePosition(NewBoard, Row, Column));
         assert(state(NewBoard, LineBoard)),
+        !,
         fail.
 
 move(Player, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
@@ -254,17 +296,5 @@ match :-
                 play(Type),
                 finish,
         showResult.
-
-cleanBoard([E1|Es],Piece,Row,Column,[H|T]) :-
-        cleanLine(E1,Piece,Row,Column,H),
-        cleanBoard(Es,Piece,Row+1,Column,T).
-
-cleanLine([Piece|T], Piece, [empty|NewTail]) :-
-        cleanLine(T, Piece, NewTail).
-
-/*cleanLine([E1|Es],Piece,Row,Column,Board,NewBoard):-
-        E1 == Piece ->
-        E1 is empty,
-        cleanLine(Es,Piece,Row,Column-1,Board,NewBoard).*/
         
         
