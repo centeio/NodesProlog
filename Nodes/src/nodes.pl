@@ -211,22 +211,26 @@ line(Piece, Row, Column, VRow, VColumn):-
 
 updateLineBoardAux(Piece, Row, Column, LineBoard, NewLineBoard) :-
         assert(lineTemp(LineBoard)),
+        NewRow1 is Row - 1,
+        NewColumn1 is Column - 1,
+        NewRow2 is Row + 1,
+        NewColumn2 is Column + 1,
         /*UP row*/
-        line(Piece, Row, Column, dec, static),
+        line(Piece, NewRow1, Column, dec, static),
         /*DOWN row*/
-        line(Piece, Row, Column, inc, static),
+        line(Piece, NewRow2, Column, inc, static),
         /*LEFT row*/
-        line(Piece, Row, Column, static, dec),
+        line(Piece, Row, NewColumn1, static, dec),
         /*RIGHT row*/
-        line(Piece, Row, Column, static, inc),
+        line(Piece, Row, NewColumn2, static, inc),
         /*NORTHWEST row*/
-        line(Piece, Row, Column, dec, dec),
+        line(Piece, NewRow1, NewColumn1, dec, dec),
         /*SOUTHWEST row*/
-        line(Piece, Row, Column, inc, dec),
+        line(Piece, NewRow2, NewColumn1, inc, dec),
         /*NORTHEAST row*/
-        line(Piece, Row, Column, dec, inc),
+        line(Piece, NewRow1, NewColumn2, dec, inc),
         /*SOUTHEAST row*/
-        line(Piece, Row, Column, inc, inc),
+        line(Piece, NewRow2, NewColumn2, inc, inc),
         retract(lineTemp(NewLineBoard)).
 
 updateLineBoard(p1, Row, Column, LineBoard, NewLineBoard) :-
@@ -257,9 +261,11 @@ finishMove(Piece, Row, Column, NewBoard, LineBoard) :-
         node(Piece) ->
                 cleanBoard(LineBoard, p1, TempLineBoard),
                 updateLineBoard(p1, Row, Column, TempLineBoard, NewTempLineBoard2),
+                displayBoard(NewBoard, NewTempLineBoard2),
                 cleanBoard(NewTempLineBoard2, p2, NewTempLineBoard), 
                 findPiece(NewBoard, 1, NewRow, NewColumn, node2),
                 updateLineBoard(p2, NewRow, NewColumn, NewTempLineBoard, NewLineBoard),
+                displayBoard(NewBoard, NewLineBoard),
                 assert(state(NewBoard, NewLineBoard)),
                 assert(nodePosition(NewBoard));
         assert(state(NewBoard, LineBoard)),
