@@ -29,6 +29,12 @@ lineBoard([
 player1(p1).
 player2(p2).
 
+unitPlayer(p1,unit1).
+unitPlayer(p2,unit2).
+
+nodePlayer(p1,node1).
+nodePlayer(p2,node2).
+
 init(Type) :-
         repeat,
                 mainMenu,
@@ -54,25 +60,39 @@ node(node2).
 nextPlayer(p1, p2).
 nextPlayer(p2, p1).
 
+findLinePiece([], _, _, _, _).
+
+findLinePiece(List, NewRow, Row, Column, Piece) :-
+        nth1(Column, List, Piece) ->
+                Row is NewRow;
+        true.
+        
+findPiece([], _, _, _, _).
+
+findPiece([H|T], NewRow, Row, Column, Piece) :-
+        findLinePiece(H, NewRow, Row, Column, Piece),
+        NewTempRow is NewRow + 1,
+        findPiece(T, NewTempRow, Row, Column, Piece).
+
 checkPosition(Row, Column) :-
         Row > 0,
         Row < 4,
-        Column > 3 - Row,
-        Column < 10 - (3 - Row), 
+        Column > 4 - Row,
+        Column < 11 - (3 - Row), 
         !.
 
 checkPosition(Row, Column) :-
         Row > 3,
         Row < 8,
-        Column > 0,
-        Column < 10,
+        Column > 1,
+        Column < 11,
         !.
 
 checkPosition(Row, Column) :-
         Row > 7,
         Row < 10,
         Column > Row - 7,
-        Column < 9 + (8 - Row),
+        Column < 10 + (8 - Row),
         !.
 
 getCommunication([H|_], 1, Column, Piece) :-
@@ -152,7 +172,7 @@ newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn) :-
                 NewRow is Row,
                 NewColumn is Column + 1;
         /*RIGHT*/
-        (VRow == inc, VColumn == static) ->
+        (VRow == static, VColumn == dec) ->
                 NewRow is Row,
                 NewColumn is Column - 1;
         /*NORTHWEST*/
@@ -172,32 +192,42 @@ newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn) :-
                 NewRow is Row + 1,
                 NewColumn is Column + 1.
 
-line(_,0,0,_,_,_,_).
+lineAux(LineBoard, Row, Column, Piece, VRow, VColumn) :-
+        getPiece(LineBoard, Row, Column, NewPiece),
+        NewPiece == empty ->
+                setCell(Row, Column, Piece, LineBoard, NewLineBoard),
+                newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn),
+                assert(lineTemp(NewLineBoard)),
+                line(Piece, NewRow, NewColumn, VRow, VColumn);
+        assert(lineTemp(LineBoard)).
 
-line(Piece, Row, Column, LineBoard, NewLineBoard, VRow, VColumn):-
-        checkPosition(Row, Column),
-        setCell(Row, Column, Piece, LineBoard, NewLineBoard),
-        newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn),
-        line(Piece, NewRow, NewColumn, LineBoard, NewLineBoard, VRow, VColumn).
+line(_,0,0,_,_).
+
+line(Piece, Row, Column, VRow, VColumn):-
+        checkPosition(Row, Column) ->
+                retract(lineTemp(LineBoard)),
+                lineAux(LineBoard, Row, Column, Piece, VRow, VColumn);
+        true.
 
 updateLineBoardAux(Piece, Row, Column, LineBoard, NewLineBoard) :-
+        assert(lineTemp(LineBoard)),
         /*UP row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, static);
+        line(Piece, Row, Column, dec, static),
         /*DOWN row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, static);
+        line(Piece, Row, Column, inc, static),
         /*LEFT row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, static, dec);
+        line(Piece, Row, Column, static, dec),
         /*RIGHT row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, static, inc);
+        line(Piece, Row, Column, static, inc),
         /*NORTHWEST row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, dec);
+        line(Piece, Row, Column, dec, dec),
         /*SOUTHWEST row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, dec);
+        line(Piece, Row, Column, inc, dec),
         /*NORTHEAST row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, dec, inc);
+        line(Piece, Row, Column, dec, inc),
         /*SOUTHEAST row*/
-        line(Piece, Row, Column, LineBoard, NewLineBoard, inc, inc);
-        1 is 1.
+        line(Piece, Row, Column, inc, inc),
+        retract(lineTemp(NewLineBoard)).
 
 updateLineBoard(p1, Row, Column, LineBoard, NewLineBoard) :-
         updateLineBoardAux(l1, Row, Column, LineBoard, NewLineBoard).
@@ -223,21 +253,24 @@ cleanBoard([E1|Es], p2, [H|T]) :-
         cleanLine(E1, l2, H),
         cleanBoard(Es, p2, T).
 
-finishMove(Player, Piece, Row, Column, NewBoard, LineBoard) :-
+finishMove(Piece, Row, Column, NewBoard, LineBoard) :-
         node(Piece) ->
-                cleanBoard(LineBoard, Player, NewTempLineBoard),
-                updateLineBoard(Player, Row, Column, NewTempLineBoard, NewLineBoard),
+                cleanBoard(LineBoard, p1, TempLineBoard),
+                updateLineBoard(p1, Row, Column, TempLineBoard, NewTempLineBoard2),
+                cleanBoard(NewTempLineBoard2, p2, NewTempLineBoard), 
+                findPiece(NewBoard, 1, NewRow, NewColumn, node2),
+                updateLineBoard(p2, NewRow, NewColumn, NewTempLineBoard, NewLineBoard),
                 assert(state(NewBoard, NewLineBoard)),
-                assert(nodePosition(NewBoard, Row, Column));
+                assert(nodePosition(NewBoard));
         assert(state(NewBoard, LineBoard)),
         !,
         fail.
 
-move(Player, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
+move(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
         validateMove(Row, Column, NewRow, NewColumn, Board, LineBoard) ->
                 setCell(Row, Column, empty, Board, NewBoardTemp),
                 setCell(NewRow, NewColumn, Piece, NewBoardTemp, NewBoard),
-                finishMove(Player, Piece, NewRow, NewColumn, NewBoard, LineBoard);
+                finishMove(Piece, NewRow, NewColumn, NewBoard, LineBoard);
         assert(state(Board, LineBoard)),
         fail.
 
@@ -265,8 +298,22 @@ nextMove(Player) :-
                 read(TempNewColumn), nl,
                 checkPosition(NewRow, TempNewColumn),
                 NewColumn is TempNewColumn + 1,
-                move(Player, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece),
+                move(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece),
                 !.
+
+finish(Player, Board):-
+        nextPlayer(Player, Next),
+        nodePlayer(Next, Node),
+        findPiece(Board, 1, Row, Column, Node),
+        unitPlayer(Player, Piece),
+        NewRow1 is Row - 1,
+        NewColumn1 is Column - 1,
+        NewRow2 is Row + 1,
+        NewColumn2 is Column + 1,
+        getPiece(Board, NewRow1, NewColumn1, Piece),
+        getPiece(Board, NewRow2, NewColumn1, Piece),
+        getPiece(Board, NewRow1, NewColumn2, Piece),
+        getPiece(Board, NewRow2, NewColumn2, Piece).
 
 play(Type) :-
         Type =:= 1 -> playHH;
@@ -278,10 +325,10 @@ playHH :-
                 retract(player(Player)), nl,
                 write('Player: '), write(Player), nl, nl,
                 nextMove(Player),
-                retract(nodePosition(Board, NodeRow, NodeColumn)),
+                retract(nodePosition(Board)),
                 nextPlayer(Player, Next),
                 assert(player(Next)),
-                finish(Board, NodeRow, NodeColumn).
+                finish(Player, Board).
 
 playHC :- 
         write('HC').
@@ -296,5 +343,3 @@ match :-
                 play(Type),
                 finish,
         showResult.
-        
-        
