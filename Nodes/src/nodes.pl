@@ -387,3 +387,28 @@ match :-
         init(Type),
         play(Type),
         showResult.
+
+moveRandUnitAux([L1|L2],Piece,Board,LineBoard):-
+        random(0,4,WillPlay),
+        WillPlay > 2 ->
+        findall([NewRow,NewColumn],validateMove(L1, L2, NewRow, NewColumn, Board, LineBoard),Moves),
+        /*   random(), length of list*/
+        move(L1, L2, NewRow, NewColumn, Board, LineBoard, Piece). //moves
+
+moveRandUnit([],_,_,_).
+moveRandUnitAux([],_,_,_).
+                                                                    
+moveRandUnit([L1|Ls],Piece,Board,LineBoard):-
+        moveRandUnitAux(L1,Piece,Board,LineBoard),
+        moveRandUnit(Ls,Piece,Board,LineBoard).
+
+randPlay(Player,Board,LineBoard):        
+        unitPlayer(Player,Piece),
+        nodePlayer(Player,Node),
+        findall([Row,Column],findPiece(Board, 1, Row, Column, Piece),Units),
+        moveRandUnit(Units,Piece,Board,LineBoard),
+        //find all e move para node.
+
+     
+                
+        
