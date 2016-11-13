@@ -3,9 +3,14 @@
 :- include('utilities.pl').
 :- use_module(library(random)).
 
+:- volatile state/2, 
+            lineTemp/1, 
+            nodePosition/2, 
+            player/1.
+
 :- dynamic state/2, 
            lineTemp/1, 
-           nodePosition/1,
+           nodePosition/2,
            player/1.
 
 board([
@@ -51,9 +56,6 @@ init(Type) :-
                 assert(state(Board, LineBoard)),
                 assert(player(p1)),
         !.
-
-finish :- 2 is 1.
-showResult.
 
 validatePiece(p1, node1).
 validatePiece(p1, unit1).
@@ -135,7 +137,7 @@ setCell(Row, Column, Piece, [H|T], [H|NewT]) :-
         TempRow is Row - 1, 
         setCell(TempRow, Column, Piece, T, NewT).
 
-validateMoveAux(_, _, _, _, Row, Column, Row, Column, _, _).
+validateUnitMoveAux(_, _, _, _, Row, Column, Row, Column, _, _).
 
 validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, TempRow, TempColumn) :-
          (Piece == 'empty', LinePiece == 'l1'; Piece == 'empty', LinePiece == 'l2') ->
@@ -277,14 +279,15 @@ finishMove(Piece, NewBoard, LineBoard) :-
         node(Piece) ->
                 cleanBoard(LineBoard, p1, TempLineBoard),
                 findPiece(NewBoard, 1, NewRow1, NewColumn1, node1),
-                updateLineBoard(p1, NewRow1, NewColumn1, TempLineBoard, NewTempLineBoard2),
-                displayBoard(NewBoard, NewTempLineBoard2),
-                cleanBoard(NewTempLineBoard2, p2, NewTempLineBoard), 
+                setCell(NewRow1, NewColumn1, l1, TempLineBoard, NewTempLineBoard2),
+                updateLineBoard(p1, NewRow1, NewColumn1, NewTempLineBoard2, NewTempLineBoard3),
+                displayBoard(NewBoard, NewTempLineBoard3),
+                cleanBoard(NewTempLineBoard3, p2, NewTempLineBoard4), 
                 findPiece(NewBoard, 1, NewRow2, NewColumn2, node2),
+                setCell(NewRow2, NewColumn2, l2, NewTempLineBoard4, NewTempLineBoard),
                 updateLineBoard(p2, NewRow2, NewColumn2, NewTempLineBoard, NewLineBoard),
-                displayBoard(NewBoard, NewLineBoard),
                 assert(state(NewBoard, NewLineBoard)),
-                assert(nodePosition(NewBoard));
+                assert(nodePosition(NewBoard, NewLineBoard));
         assert(state(NewBoard, LineBoard)),
         !,
         fail.
@@ -312,14 +315,14 @@ move(Piece, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
         
 
 readMove(Player, Board, LineBoard, Piece, Row, Column) :-
+        nl, displayBoard(Board, LineBoard),
         repeat,
-                displayBoard(Board, LineBoard),
-                write('Row: '),
+                nl, write('Row: '),
                 read(Row),
                 write('Column: '),
                 read(TempColumn),
-                checkPosition(Row, TempColumn),
                 Column is TempColumn + 1,
+                checkPosition(Row, Column),
                 getPiece(Board, Row, Column, Piece),
                 validatePiece(Player, Piece),
                 !.
@@ -340,27 +343,17 @@ nextMove(Player) :-
 
 finish(Player, Board):-
         nextPlayer(Player, Next),
-        write(Next), nl,
         nodePlayer(Next, Node),
-        write(Node), nl,
         findPiece(Board, 1, Row, Column, Node),
-        write('Row: '), write(Row), nl,
-        write('Column: '), write(Column), nl, 
         unitPlayer(Player, Piece),
-        write('Piece: '), write(Piece), nl,
         NewRow1 is Row - 1,
         NewColumn1 is Column - 1,
         NewRow2 is Row + 1,
         NewColumn2 is Column + 1,
-        write('1'), nl,
         getPiece(Board, NewRow1, Column, Piece),
-        write('2'), nl,
         getPiece(Board, NewRow2, Column, Piece),
-        write('3'), nl,
         getPiece(Board, Row, NewColumn1, Piece),
-        write('4'), nl,
-        getPiece(Board, Row, NewColumn2, Piece),
-        write('5'), nl.
+        getPiece(Board, Row, NewColumn2, Piece).
 
 play(Type) :-
         Type =:= 1 -> playHH;
@@ -372,10 +365,12 @@ playHH :-
                 retract(player(Player)), nl,
                 write('Player: '), write(Player), nl, nl,
                 nextMove(Player),
-                retract(nodePosition(Board)),
+                retract(nodePosition(Board, NewLineBoard)),
                 nextPlayer(Player, Next),
                 assert(player(Next)),
-                finish(Player, Board).
+                finish(Player, Board),
+                displayBoard(Board, NewLineBoard),
+                !.
 
 nextHCMove(Player):-
         Player == p1 ->
@@ -406,8 +401,7 @@ playCC :-
 
 match :-
         init(Type),
-        play(Type),
-        showResult.
+        play(Type).
 
 moveRandUnit([],_,_,_).
                                                                     
@@ -448,4 +442,3 @@ randPlay(Player):-
 
      
                 
-        
