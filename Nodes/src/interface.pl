@@ -8,13 +8,12 @@ translateContent(a, ' a |').
 translateContent(roofL, '    |').
 translateContent(roofLM, '    |').
 translateContent(roofR, '    ').
-translateContent(l1, 'l1 |').
-translateContent(l2, 'l2 |').
 translateContent(l, ' l |').
+translateContent(k, ' k |').
 
 translateBottom(null, '    ').
 translateBottom(X, '___|') :-
-        member(X, [empty, unit1, unit2, node1, node2, l1, l2, a, l]).
+        member(X, [empty, unit1, unit2, node1, node2, l1, l2, a, l, k]).
 translateBottom(roofL, ' ___|').
 translateBottom(roofLM, '    |').
 translateBottom(roofR, '___ ').
@@ -75,6 +74,28 @@ mainMenu :-
         write('**        1 - Player vs Player        **'), nl,
         write('**       2 - Player vs Computer       **'), nl,
         write('**      3 - Computer vs Computer      **'), nl,
+        write('**                                    **'), nl,
+        write('**                                    **'), nl,
+        write('****************************************'), nl,
+        write('****************************************'), nl.
+
+levelMenu :-
+        write('****************************************'), nl,
+        write('****************************************'), nl,
+        write('**                                    **'), nl,
+        write('**                                    **'), nl,
+        write('**      2 - Player vs Computer        **'), nl,
+        write('**                                    **'), nl,
+        write('**                                    **'), nl,
+        write('****************************************'), nl,
+        write('****************************************'), nl,
+        write('**                                    **'), nl,
+        write('**                                    **'), nl,
+        write('**               Level                **'), nl,
+        write('**                                    **'), nl,
+        write('**             1 - Easy               **'), nl,
+        write('**             2 - Hard               **'), nl,
+        write('**                                    **'), nl,
         write('**                                    **'), nl,
         write('**                                    **'), nl,
         write('****************************************'), nl,
