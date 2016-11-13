@@ -2,6 +2,11 @@
 :- include('interface.pl').
 :- include('utilities.pl').
 
+:- volatile state/2, 
+            lineTemp/1, 
+            nodePosition/2, 
+            player/1.
+
 :- dynamic state/2, 
            lineTemp/1, 
            nodePosition/2,
