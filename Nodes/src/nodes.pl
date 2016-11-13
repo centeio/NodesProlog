@@ -1,6 +1,7 @@
 :- use_module(library(lists)).
 :- include('interface.pl').
 :- include('utilities.pl').
+:- use_module(library(random)).
 
 :- dynamic state/2, 
            lineTemp/1, 
@@ -376,11 +377,31 @@ playHH :-
                 assert(player(Next)),
                 finish(Player, Board).
 
+nextHCMove(Player):-
+        Player == p1 ->
+        nextMove(Player);
+        randPlay(Player).
+        
+
 playHC :- 
-        write('HC').
+        repeat,
+                retract(player(Player)), nl,
+                write('Player: '), write(Player), nl, nl,
+                nextHCMove(Player),
+                retract(nodePosition(Board)),
+                nextPlayer(Player, Next),
+                assert(player(Next)),
+                finish(Player, Board).
 
 playCC :- 
-        write('CC').
+        repeat,
+                retract(player(Player)), nl,
+                write('Player: '), write(Player), nl, nl,
+                randPlay(Player),
+                retract(nodePosition(Board)),
+                nextPlayer(Player, Next),
+                assert(player(Next)),
+                finish(Player, Board).
 
 
 match :-
@@ -388,26 +409,42 @@ match :-
         play(Type),
         showResult.
 
-moveRandUnitAux([L1|L2],Piece,Board,LineBoard):-
-        random(0,4,WillPlay),
-        WillPlay > 2 ->
-        findall([NewRow,NewColumn],validateMove(L1, L2, NewRow, NewColumn, Board, LineBoard),Moves),
-        /*   random(), length of list*/
-        move(L1, L2, NewRow, NewColumn, Board, LineBoard, Piece). //moves
-
 moveRandUnit([],_,_,_).
-moveRandUnitAux([],_,_,_).
                                                                     
 moveRandUnit([L1|Ls],Piece,Board,LineBoard):-
-        moveRandUnitAux(L1,Piece,Board,LineBoard),
+        nth1(Row,L1,0),
+        nth1(Column,L1,1),
+        random(0,4,WillPlay),
+        WillPlay > 2 ->
+        findall([NewRow,NewColumn],validateUnitMove(Row, Column, NewRow, NewColumn, Board, LineBoard),Moves),
+        length(Moves,LengthMoves),
+        random(0,LengthMoves,Move),
+        nth1(NewPos,Moves,Move),
+        nth1(FinalRow,NewPos,0),
+        nth1(FinalColumn,NewPos,1),
+        moveUnit(Row, Column, FinalRow, FinalColumn, Board, LineBoard, Piece);
         moveRandUnit(Ls,Piece,Board,LineBoard).
+        
+randPlay(Player):- 
+        retract(state(Board, LineBoard)),
 
-randPlay(Player,Board,LineBoard):        
         unitPlayer(Player,Piece),
         nodePlayer(Player,Node),
+        
         findall([Row,Column],findPiece(Board, 1, Row, Column, Piece),Units),
         moveRandUnit(Units,Piece,Board,LineBoard),
-        //find all e move para node.
+        
+        findPiece(Board, 1, NodeRow, NodeColumn, Node),
+        findall([NewNodeRow,NewNodeColumn],validateUnitMove(NodeRow, NodeColumn, NewNodeRow, NewNodeColumn, Board, LineBoard),NodeMoves),
+        length(NodeMoves,LengthNodeMoves),
+        random(0,LengthNodeMoves,NodeMove),
+        nth1(NewNodePos, NodeMoves, NodeMove),
+        nth1(FinalNodeRow, NewNodePos, 0),
+        nth1(FinalNodeColumn, NewNodePos, 1),
+        moveNode(Row, Column, FinalNodeRow, FinalNodeColumn, Board, LineBoard, Piece),
+
+        assert(state(Board, LineBoard)).
+
 
      
                 
