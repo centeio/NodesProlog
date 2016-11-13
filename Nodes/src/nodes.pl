@@ -2,6 +2,11 @@
 :- include('interface.pl').
 :- include('utilities.pl').
 
+:- dynamic state/2, 
+           lineTemp/1, 
+           nodePosition/1,
+           player/1.
+
 board([
         [null, null, roofL, unit1, unit1, node1, unit1, unit1, roofR, null, null],
         [null, roofL, empty, empty, unit1, unit1, unit1, empty, empty, roofR, null],
@@ -76,13 +81,13 @@ findPiece([H|T], NewRow, Row, Column, Piece) :-
 
 checkPosition(Row, Column) :-
         Row > 0,
-        Row < 4,
-        Column > 4 - Row,
+        Row < 3,
+        Column > 3 - Row,
         Column < 11 - (3 - Row), 
         !.
 
 checkPosition(Row, Column) :-
-        Row > 3,
+        Row > 2,
         Row < 8,
         Column > 1,
         Column < 11,
@@ -91,7 +96,7 @@ checkPosition(Row, Column) :-
 checkPosition(Row, Column) :-
         Row > 7,
         Row < 10,
-        Column > Row - 7,
+        Column > Row - 6,
         Column < 10 + (8 - Row),
         !.
 
@@ -129,34 +134,42 @@ setCell(Row, Column, Piece, [H|T], [H|NewT]) :-
         TempRow is Row - 1, 
         setCell(TempRow, Column, Piece, T, NewT).
 
-validateMove(Row, Column, Row, Column, _, _).
+validateMoveAux(_, _, _, _, Row, Column, Row, Column, _, _).
 
-validateMove(Row, Column, NewRow, NewColumn, Board, LineBoard) :-
+validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, TempRow, TempColumn) :-
+         (Piece == 'empty', LinePiece == 'l1'; Piece == 'empty', LinePiece == 'l2') ->
+                setCell(Row, Column, l, LineBoard, TempLineBoard),
+                setCell(Row, Column, a, Board, NewBoard),
+                validateUnitMove(TempRow, TempColumn, NewRow, NewColumn, NewBoard, TempLineBoard).
+
+validateNodeMove(Row, Column, Row, Column, _, _) :- fail.
+
+validateNodeMove(Row, Column, NewRow, NewColumn, Board, _) :-
+        NewRow < Row + 2,
+        NewRow > Row - 2,
+        NewColumn < Column + 2,
+        NewColumn > Column - 2,
+        getPiece(Board, NewRow, NewColumn, empty).
+
+validateUnitMove(Row, Column, Row, Column, _, _).
+
+validateUnitMove(Row, Column, NewRow, NewColumn, Board, LineBoard) :-
         TempRow is Row - 1,
         getCommunication(LineBoard, Row, Column, LinePiece),
         getPiece(Board, TempRow, Column, Piece),
-        (Piece == 'empty', LinePiece == 'l1'; Piece == 'empty', LinePiece == 'l2') ->
-                setCell(TempRow, Column, l, LineBoard, TempLineBoard),
-                validateMove(TempRow, Column, NewRow, NewColumn, Board, TempLineBoard);
+        validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, TempRow, Column);
         TempRow is Row + 1,
         getCommunication(LineBoard, Row, Column, LinePiece),
         getPiece(Board, TempRow, Column, Piece),
-        (Piece == 'empty', LinePiece == 'l1'; Piece == 'empty', LinePiece == 'l2') ->
-                setCell(TempRow, Column, l, LineBoard, TempLineBoard),
-                validateMove(TempRow, Column, NewRow, NewColumn, Board, TempLineBoard);
+        validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, TempRow, Column);
         TempColumn is Column - 1,
         getCommunication(LineBoard, Row, Column, LinePiece),
         getPiece(Board, Row, TempColumn, Piece),
-        (Piece == 'empty', LinePiece == 'l1'; Piece == 'empty', LinePiece == 'l2') ->
-                setCell(Row, TempColumn, l, LineBoard, TempLineBoard),
-                validateMove(Row, TempColumn, NewRow, NewColumn, Board, TempLineBoard);        
+        validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, Row, TempColumn);     
         TempColumn is Column + 1,
         getCommunication(LineBoard, Row, Column, LinePiece),
         getPiece(Board, Row, TempColumn, Piece),
-        (Piece == 'empty', LinePiece == 'l1'; Piece == 'empty', LinePiece == 'l2') ->
-                setCell(Row, TempColumn, l, LineBoard, TempLineBoard),
-                validateMove(Row, TempColumn, NewRow, NewColumn, Board, TempLineBoard).
-
+        validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, Row, TempColumn).
 
 newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn) :-
         /*UP*/
@@ -199,7 +212,9 @@ lineAux(LineBoard, Row, Column, Piece, VRow, VColumn) :-
                 newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn),
                 assert(lineTemp(NewLineBoard)),
                 line(Piece, NewRow, NewColumn, VRow, VColumn);
-        assert(lineTemp(LineBoard)).
+        assert(lineTemp(LineBoard)),
+        newLinePosition(Row, Column, NewRow, NewColumn, VRow, VColumn),
+        line(Piece, NewRow, NewColumn, VRow, VColumn).
 
 line(_,0,0,_,_).
 
@@ -257,14 +272,15 @@ cleanBoard([E1|Es], p2, [H|T]) :-
         cleanLine(E1, l2, H),
         cleanBoard(Es, p2, T).
 
-finishMove(Piece, Row, Column, NewBoard, LineBoard) :-
+finishMove(Piece, NewBoard, LineBoard) :-
         node(Piece) ->
                 cleanBoard(LineBoard, p1, TempLineBoard),
-                updateLineBoard(p1, Row, Column, TempLineBoard, NewTempLineBoard2),
+                findPiece(NewBoard, 1, NewRow1, NewColumn1, node1),
+                updateLineBoard(p1, NewRow1, NewColumn1, TempLineBoard, NewTempLineBoard2),
                 displayBoard(NewBoard, NewTempLineBoard2),
                 cleanBoard(NewTempLineBoard2, p2, NewTempLineBoard), 
-                findPiece(NewBoard, 1, NewRow, NewColumn, node2),
-                updateLineBoard(p2, NewRow, NewColumn, NewTempLineBoard, NewLineBoard),
+                findPiece(NewBoard, 1, NewRow2, NewColumn2, node2),
+                updateLineBoard(p2, NewRow2, NewColumn2, NewTempLineBoard, NewLineBoard),
                 displayBoard(NewBoard, NewLineBoard),
                 assert(state(NewBoard, NewLineBoard)),
                 assert(nodePosition(NewBoard));
@@ -272,13 +288,27 @@ finishMove(Piece, Row, Column, NewBoard, LineBoard) :-
         !,
         fail.
 
-move(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
-        validateMove(Row, Column, NewRow, NewColumn, Board, LineBoard) ->
+moveNode(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
+        validateNodeMove(Row, Column, NewRow, NewColumn, Board, LineBoard) ->
                 setCell(Row, Column, empty, Board, NewBoardTemp),
                 setCell(NewRow, NewColumn, Piece, NewBoardTemp, NewBoard),
-                finishMove(Piece, NewRow, NewColumn, NewBoard, LineBoard);
+                finishMove(Piece, NewBoard, LineBoard);
         assert(state(Board, LineBoard)),
         fail.
+
+moveUnit(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
+        validateUnitMove(Row, Column, NewRow, NewColumn, Board, LineBoard) ->
+                setCell(Row, Column, empty, Board, NewBoardTemp),
+                setCell(NewRow, NewColumn, Piece, NewBoardTemp, NewBoard),
+                finishMove(Piece, NewBoard, LineBoard);
+        assert(state(Board, LineBoard)),
+        fail.
+
+move(Piece, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece) :-
+        node(Piece) ->
+                moveNode(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece);
+                moveUnit(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece).
+        
 
 readMove(Player, Board, LineBoard, Piece, Row, Column) :-
         repeat,
@@ -302,24 +332,34 @@ nextMove(Player) :-
                 read(NewRow),
                 write('Column: '),
                 read(TempNewColumn), nl,
-                checkPosition(NewRow, TempNewColumn),
                 NewColumn is TempNewColumn + 1,
-                move(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece),
+                checkPosition(NewRow, NewColumn),
+                move(Piece, Row, Column, NewRow, NewColumn, Board, LineBoard, Piece),
                 !.
 
 finish(Player, Board):-
         nextPlayer(Player, Next),
+        write(Next), nl,
         nodePlayer(Next, Node),
+        write(Node), nl,
         findPiece(Board, 1, Row, Column, Node),
+        write('Row: '), write(Row), nl,
+        write('Column: '), write(Column), nl, 
         unitPlayer(Player, Piece),
+        write('Piece: '), write(Piece), nl,
         NewRow1 is Row - 1,
         NewColumn1 is Column - 1,
         NewRow2 is Row + 1,
         NewColumn2 is Column + 1,
-        getPiece(Board, NewRow1, NewColumn1, Piece),
-        getPiece(Board, NewRow2, NewColumn1, Piece),
-        getPiece(Board, NewRow1, NewColumn2, Piece),
-        getPiece(Board, NewRow2, NewColumn2, Piece).
+        write('1'), nl,
+        getPiece(Board, NewRow1, Column, Piece),
+        write('2'), nl,
+        getPiece(Board, NewRow2, Column, Piece),
+        write('3'), nl,
+        getPiece(Board, Row, NewColumn1, Piece),
+        write('4'), nl,
+        getPiece(Board, Row, NewColumn2, Piece),
+        write('5'), nl.
 
 play(Type) :-
         Type =:= 1 -> playHH;
@@ -345,7 +385,5 @@ playCC :-
 
 match :-
         init(Type),
-        repeat,
-                play(Type),
-                finish,
+        play(Type),
         showResult.

@@ -4,15 +4,17 @@ translateContent(unit1, ' x |').
 translateContent(unit2, ' o |').
 translateContent(node1, ' 1 |').
 translateContent(node2, ' 2 |').
+translateContent(a, ' a |').
 translateContent(roofL, '    |').
 translateContent(roofLM, '    |').
 translateContent(roofR, '    ').
 translateContent(l1, 'l1 |').
 translateContent(l2, 'l2 |').
+translateContent(l, ' l |').
 
 translateBottom(null, '    ').
 translateBottom(X, '___|') :-
-        member(X, [empty, unit1, unit2, node1, node2, l1, l2]).
+        member(X, [empty, unit1, unit2, node1, node2, l1, l2, a, l]).
 translateBottom(roofL, ' ___|').
 translateBottom(roofLM, '    |').
 translateBottom(roofR, '___ ').
