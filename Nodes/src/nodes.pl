@@ -385,7 +385,7 @@ match :-
 moveRandUnitAux([L1|L2],Piece,Board,LineBoard):-
         random(0,4,WillPlay),
         WillPlay > 2 ->
-        findall([NewRow,NewColumn],validateMove(L1, L2, NewRow, NewColumn, Board, LineBoard),Moves),
+        findall([NewRow,NewColumn],validateMove(L1, L2, NewRow, NewColumn, Board, LineBoard), Moves),
         /*   random(), length of list*/
         move(L1, L2, NewRow, NewColumn, Board, LineBoard, Piece). //moves
 
