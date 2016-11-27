@@ -193,7 +193,7 @@ setCell(Row, Column, Piece, [H|T], [H|NewT]) :-
         setCell(TempRow, Column, Piece, T, NewT).
 
 /*checks if node can move to desired position*/
-validateNodeMove(Row, Column, Row, Column, _) :- fail.
+validateNodeMove(Row, Column, Row, Column, _) :- false.
 
 validateNodeMove(Row, Column, NewRow, NewColumn, Board) :-
         NewRow is Row,
@@ -205,7 +205,7 @@ validateNodeMove(Row, Column, NewRow, NewColumn, Board) :-
         NewColumn is Column,
         getPiece(Board, NewRow, NewColumn, empty).
 
-/*checks if unit can mov to desired position*/
+/*checks if unit can move to desired position*/
 validateUnitMoveAux(_, _, _, _, Row, Column, Row, Column, _, _).
 
 validateUnitMoveAux(Board, LineBoard, Piece, LinePiece, Row, Column, NewRow, NewColumn, TempRow, TempColumn) :-
@@ -441,7 +441,7 @@ finishMove(Piece, Finish) :-
                 updateLineBoard(NewRow2, NewColumn2, NewTempLineBoard, NewLineBoard),
                 assert(state(NewBoard, NewLineBoard)),
                 assert(nodePosition(NewBoard, NewLineBoard));
-        fail.
+        false.
 
 moveNode(Row, Column, NewRow, NewColumn, Board, LineBoard, Piece, Finish) :-
         validateNodeMove(Row, Column, NewRow, NewColumn, Board) ->
@@ -511,7 +511,7 @@ finish(Player, Board):-
 
 play(Type) :-
         Type =:= 1 -> playHH;
-        Type =:= 2 -> chooseLevel;
+        Type =:= 2 -> playHC;
         Type =:= 3 -> playCC.
 
 playHH :-
@@ -542,16 +542,13 @@ moveRandUnit([], _).
 moveRandUnit([L1|Ls],Piece):-
         nth1(1, L1, Row),
         nth1(2, L1, Column),
-        random(0, 4, WillPlay),
-        WillPlay > 1 ->
-                retract(state(Board, LineBoard)),
-                assert(validateComputerList([])),
-                validateComputerUnitMove(Row, Column, Board, LineBoard),
-                assert(state(Board, LineBoard)),
-                retract(validateComputerList(Moves)),
-                length(Moves, LengthMoves),
-                moveRanUnitAux(Row, Column, LengthMoves, Moves, Piece),
-                moveRandUnit(Ls,Piece);
+        retract(state(Board, LineBoard)),
+        assert(validateComputerList([])),
+        validateComputerUnitMove(Row, Column, Board, LineBoard),
+        assert(state(Board, LineBoard)),
+        retract(validateComputerList(Moves)),
+        length(Moves, LengthMoves),
+        moveRanUnitAux(Row, Column, LengthMoves, Moves, Piece),
         moveRandUnit(Ls,Piece).
 
 randPlayAux(NodeRow, NodeColumn, Board, LineBoard, NodeMoves, Piece) :-
@@ -563,8 +560,11 @@ randPlayAux(NodeRow, NodeColumn, Board, LineBoard, NodeMoves, Piece) :-
                 nth1(1, NewNodePos, FinalNodeRow),
                 nth1(2, NewNodePos, FinalNodeColumn),
                 moveNode(NodeRow, NodeColumn, FinalNodeRow, FinalNodeColumn, Board, LineBoard, Piece, _),
-                assert(nodePosition(FinalNodeRow, FinalNodeColumn));
-        assert(nodePosition(NodeRow, NodeColumn)).
+                retract(state(TempBoard, TempLineBoard)),
+                assert(nodePosition(TempBoard, TempLineBoard)),
+                assert(state(TempBoard, TempLineBoard));
+        assert(state(Board, LineBoard)),
+        assert(nodePosition(Board, LineBoard)).
         
 randPlay(Player):- 
         retract(state(Board, LineBoard)),
@@ -595,7 +595,8 @@ randPlay(Player):-
         finishMove(Node, 1),
         retract(state(TempBoard, TempLineBoard)),
         displayBoard(TempBoard, TempLineBoard),
-        assert(state(TempBoard, TempLineBoard)).
+        assert(state(TempBoard, TempLineBoard)),
+        !.
 
 nextHCMove(Player):-
         Player == p1 ->
