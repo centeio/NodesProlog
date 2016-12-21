@@ -147,3 +147,40 @@ distance(dataMining, industryRevolution4, 2).
 distance(dataMining, takingControl, 2).
 distance(dataMining, peopleVSMachine, 2).
 distance(dataMining, intelligentAssistance, 2).*/
+
+
+distance(ai, ml, 0).
+%distance(ai, websecurity, 10).
+distance(ai, cloudhosting, 1).
+%distance(ai, industry40, 1).
+distance(ai, remoteaccess, 1).
+distance(ai, vr, 1).
+
+%distance(ml, websecurity, 10).
+distance(ml, cloudhosting, 1).
+%distance(ml, industry40, 1).
+distance(ml, remoteaccess, 1).
+distance(ml, vr, 1).
+
+%distance(websecurity, cloudhosting, 10).
+%distance(websecurity, industry40, 10).
+%distance(websecurity, remoteaccess, 10).
+%distance(websecurity, vr, 10).
+
+%distance(cloudhosting, industry40, 10).
+distance(cloudhosting, remoteaccess, 1).
+distance(cloudhosting, vr, 1).
+
+%distance(industry40, remoteaccess, 10).
+%distance(industry40, vr, 10).
+
+distance(remoteaccess, vr, 1).
+
+%AI
+topicCoord(1,0,1).
+
+%ML
+topicCoord(2,0,1).
+
+
+
