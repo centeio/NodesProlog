@@ -1,4 +1,4 @@
-:-include('Database2.pl').
+:-include('Database.pl').
 :-use_module(library(clpfd)).
 :-use_module(library(lists)).
 :-set_prolog_flag(toplevel_print_options,
@@ -24,8 +24,8 @@ invited(Invited,NPalestras, NDias):-
         scalar_product(Gen,Invited,#=,0),
         sum(Invited,#=,NPalestras),
         alldif1(Invited,Countries),
-        statistics(walltime,_),    
-        labeling([], Invited),
+        statistics(walltime,_),
+        labeling([maximize(Total)], Invited),
         statistics(walltime,[_,T]),
         write('Time: '), write(T), nl,
         fd_statistics,
@@ -42,7 +42,9 @@ createProximityMatrix([T1|Ts], [D1|Ds]) :-
 getDistLine(_, [], []).
 getDistLine(T2, [T1|Ts], [D1|Ds]) :-
        distance(T2, T1, D1),
-       getDistLine(T2, Ts, Ds). 
+       getDistLine(T2, Ts, Ds).
+
+printResult([], _, _, _, _, _, _, _).
 
 printResult([0|Is], [_|Ss], [_|Ts], [_|Cs], [_|Gs], [_|Ds], [_|As], DPrice) :-
         printResult(Is, Ss, Ts, Cs, Gs, Ds, As, DPrice).
