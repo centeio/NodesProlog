@@ -21,6 +21,8 @@
 \setcounter{tocdepth}{3}
 \usepackage{graphicx}
 \usepackage{epstopdf}
+\usepackage{mathtools}
+
 
 \usepackage{url}
   
@@ -43,8 +45,8 @@
 % their surnames. This ensures that the names appear correctly in
 % the running heads and the author index.
 %
-\author{Carolina Centeio Jorge
-\and Tiago Almeida}
+\author{Carolina Centeio Jorge (up201403090)
+\and Tiago Almeida (up20130565)}
 %
 \authorrunning{CSOP: Choosing Speakers for a Diversified Topic Conference}
 % (feature abused for this document to repeat the title also on left hand pages)
@@ -68,369 +70,601 @@ Oradores Convidados 1\\
 
 
 \begin{abstract}
-The abstract should summarize the contents of the paper and should
-contain at least 70 and at most 150 words. It should be written using the
-\emph{abstract} environment.
-\keywords{We would like to encourage you to list your keywords within
-the abstract section}
+%The abstract should summarize the contents of the paper and should
+%contain at least 70 and at most 150 words. It should be written using the
+\emph{This project aims to find the better set of speakers for a certain conference. The goal is to maximize the difference between topics (each speaker has a topic associated) considering some money, gender and country constraints. Since it is a Constraint Satisfaction and Optimization Problem, we used SICStus Prolog and the clp(FD) module.}
+\keywords{CSOP, Prolog, clpfd, clp, constraint, logic programming, optimization}
 \end{abstract}
 
 
 \section{Introduction}
 
-You are strongly encouraged to use \LaTeXe{} for the
-preparation of your camera-ready manuscript together with the
-corresponding Springer class file \verb+llncs.cls+. Only if you use
-\LaTeXe{} can hyperlinks be generated in the online version
-of your manuscript.
+In the scope of the course PLOG, we were asked to implement a solution of a Constraint Satisfaction and Optimization Problem. Therefore, we chose "Invited Speakers" - it is about choosing speakers for a conference - as subject to our project. This problem is similar to the "Production Management" problem, since we have to fulfill several constraints on the speakers’ diversity, but we need to maximize the difference amongst topics in the conference.\\
+In this paper we will describe the problem in detail and its approach: decision variables (their domains and constraints), evaluation function and search strategy. In the end, we will present our solution, results and analyze them.
 
-The \LaTeX{} source of this instruction file for \LaTeX{} users may be
-used as a template. This is
-located in the ``authors'' subdirectory in
-\url{ftp://ftp.springer.de/pub/tex/latex/llncs/latex2e/instruct/} and
-entitled \texttt{typeinst.tex}. There is a separate package for Word 
-users. Kindly send the final and checked source
-and PDF files of your paper to the Contact Volume Editor. This is
-usually one of the organizers of the conference. You should make sure
-that the \LaTeX{} and the PDF files are identical and correct and that
-only one version of your paper is sent. It is not possible to update
-files at a later stage. Please note that we do not need the printed
-paper.
 
-We would like to draw your attention to the fact that it is not possible
-to modify a paper in any way, once it has been published. This applies
-to both the printed book and the online version of the publication.
-Every detail, including the order of the names of the authors, should
-be checked before the paper is sent to the Volume Editors.
+\section{Problem Description}
 
-\subsection{Checking the PDF File}
+For a certain conference (that will take D days and T topics), there is the need to choose topics and speakers to talk about these topics. Each speaker has a name, a gender, a topic, a country, a travel expense and accommodation type associated.\\
+There is a budget that cannot be exceeded. This budget will be used to pay speakers’ travel and accommodation expenses. The travel expense depends on the speaker and so does the accommodation, since one can choose to stay just for one night or for all conference (D nights).\\
+Also, the speakers have to be equally distributed in gender and there cannot be two speakers coming from the same country. \\
+All pairs of topics have a defined distance. The goal is to choose the speakers that maximize this distance amongst all topics in the conference.
 
-Kindly assure that the Contact Volume Editor is given the name and email
-address of the contact author for your paper. The Contact Volume Editor
-uses these details to compile a list for our production department at
-SPS in India. Once the files have been worked upon, SPS sends a copy of
-the final pdf of each paper to its contact author. The contact author is
-asked to check through the final pdf to make sure that no errors have
-crept in during the transfer or preparation of the files. This should
-not be seen as an opportunity to update or copyedit the papers, which is
-not possible due to time constraints. Only errors introduced during the
-preparation of the files will be corrected.
+\section{Approach}
 
-This round of checking takes place about two weeks after the files have
-been sent to the Editorial by the Contact Volume Editor, i.e., roughly
-seven weeks before the start of the conference for conference
-proceedings, or seven weeks before the volume leaves the printer's, for
-post-proceedings. If SPS does not receive a reply from a particular
-contact author, within the timeframe given, then it is presumed that the
-author has found no errors in the paper. The tight publication schedule
-of LNCS does not allow SPS to send reminders or search for alternative
-email addresses on the Internet.
+To solve this problem, we create several lists with the speakers’ information. The lists Speakers ($>=$1), Topics ($>=$1), Countries ($>=$1), Gen (-1 if male, 1 if female), Desloc ($>=$0) and Aloj (1 or 2) have the information about names, topics, countries, gender, travel expense and type of accommodation of all possible speakers. We also create the list Invited, which contains the decision variables and the Table of Distances (integers $>=0$, that represent the difference between two topics: 0 if the topic is exactly the same and the greater the more different they are) between all pairs of topics (Dist). The index determines the speaker in every list. Speakers, Topics and Countries are indexes for dictionaries of names.
 
-In some cases, it is the Contact Volume Editor that checks all the final
-pdfs. In such cases, the authors are not involved in the checking phase.
+\subsection{Decision Variables}
 
-\subsection{Additional Information Required by the Volume Editor}
+In this project, the decision variables are the Boolean values for each speaker, that determines whether this is going to be chosen or not. Therefore, there are as many variables as possible speakers and their domain is Boolean (0 or 1). Ex: Invited = [I1,I2,I3], I1, I2 and I3 are the decision variables that can be 1 or 0 meaning the speaker 1, 2 or 3 are or are not going, respectively.
 
-If you have more than one surname, please make sure that the Volume Editor
-knows how you are to be listed in the author index.
-
-\subsection{Copyright Forms}
-
-The copyright form may be downloaded from the ``For Authors"
-(Information for LNCS Authors) section of the LNCS Website:
-\texttt{www.springer.com/lncs}. Please send your signed copyright form
-to the Contact Volume Editor, either as a scanned pdf or by fax or by
-courier. One author may sign on behalf of all of the other authors of a
-particular paper. Digital signatures are acceptable.
-
-\section{Paper Preparation}
-
-Springer provides you with a complete integrated \LaTeX{} document class
-(\texttt{llncs.cls}) for multi-author books such as those in the LNCS
-series. Papers not complying with the LNCS style will be reformatted.
-This can lead to an increase in the overall number of pages. We would
-therefore urge you not to squash your paper.
-
-Please always cancel any superfluous definitions that are
-not actually used in your text. If you do not, these may conflict with
-the definitions of the macro package, causing changes in the structure
-of the text and leading to numerous mistakes in the proofs.
-
-If you wonder what \LaTeX{} is and where it can be obtained, see the
-``\textit{LaTeX project site}'' (\url{http://www.latex-project.org})
-and especially the webpage ``\textit{How to get it}''
-(\url{http://www.latex-project.org/ftp.html}) respectively.
-
-When you use \LaTeX\ together with our document class file,
-\texttt{llncs.cls},
-your text is typeset automatically in Computer Modern Roman (CM) fonts.
-Please do
-\emph{not} change the preset fonts. If you have to use fonts other
-than the preset fonts, kindly submit these with your files.
-
-Please use the commands \verb+\label+ and \verb+\ref+ for
-cross-references and the commands \verb+\bibitem+ and \verb+\cite+ for
-references to the bibliography, to enable us to create hyperlinks at
-these places.
-
-For preparing your figures electronically and integrating them into
-your source file we recommend using the standard \LaTeX{} \verb+graphics+ or
-\verb+graphicx+ package. These provide the \verb+\includegraphics+ command.
-In general, please refrain from using the \verb+\special+ command.
-
-Remember to submit any further style files and
-fonts you have used together with your source files.
-
-\subsubsection{Headings.}
-
-Headings should be capitalized
-(i.e., nouns, verbs, and all other words
-except articles, prepositions, and conjunctions should be set with an
-initial capital) and should,
-with the exception of the title, be aligned to the left.
-Words joined by a hyphen are subject to a special rule. If the first
-word can stand alone, the second word should be capitalized.
-
-Here are some examples of headings: ``Criteria to Disprove
-Context-Freeness of Collage Language", ``On Correcting the Intrusion of
-Tracing Non-deterministic Programs by Software", ``A User-Friendly and
-Extendable Data Distribution System", ``Multi-flip Networks:
-Parallelizing GenSAT", ``Self-determinations of Man".
-
-\subsubsection{Lemmas, Propositions, and Theorems.}
-
-The numbers accorded to lemmas, propositions, and theorems, etc. should
-appear in consecutive order, starting with Lemma 1, and not, for
-example, with Lemma 11.
-
-\subsection{Figures}
-
-For \LaTeX\ users, we recommend using the \emph{graphics} or \emph{graphicx}
-package and the \verb+\includegraphics+ command.
-
-Please check that the lines in line drawings are not
-interrupted and are of a constant width. Grids and details within the
-figures must be clearly legible and may not be written one on top of
-the other. Line drawings should have a resolution of at least 800 dpi
-(preferably 1200 dpi). The lettering in figures should have a height of
-2~mm (10-point type). Figures should be numbered and should have a
-caption which should always be positioned \emph{under} the figures, in
-contrast to the caption belonging to a table, which should always appear
-\emph{above} the table; this is simply achieved as matter of sequence in
-your source.
-
-Please center the figures or your tabular material by using the \verb+\centering+
-declaration. Short captions are centered by default between the margins
-and typeset in 9-point type (Fig.~\ref{fig:example} shows an example).
-The distance between text and figure is preset to be about 8~mm, the
-distance between figure and caption about 6~mm.
-
-To ensure that the reproduction of your illustrations is of a reasonable
-quality, we advise against the use of shading. The contrast should be as
-pronounced as possible.
-
-If screenshots are necessary, please make sure that you are happy with
-the print quality before you send the files.
-\begin{figure}
-\centering
-\includegraphics[height=6.2cm]{eijkel2}
-\caption{One kernel at $x_s$ (\emph{dotted kernel}) or two kernels at
-$x_i$ and $x_j$ (\textit{left and right}) lead to the same summed estimate
-at $x_s$. This shows a figure consisting of different types of
-lines. Elements of the figure described in the caption should be set in
-italics, in parentheses, as shown in this sample caption.}
-\label{fig:example}
-\end{figure}
-
-Please define figures (and tables) as floating objects. Please avoid
-using optional location parameters like ``\verb+[h]+" for ``here".
-
-\paragraph{Remark 1.}
-
-In the printed volumes, illustrations are generally black and white
-(halftones), and only in exceptional cases, and if the author is
-prepared to cover the extra cost for color reproduction, are colored
-pictures accepted. Colored pictures are welcome in the electronic
-version free of charge. If you send colored figures that are to be
-printed in black and white, please make sure that they really are
-legible in black and white. Some colors as well as the contrast of
-converted colors show up very poorly when printed in black and white.
-
-\subsection{Formulas}
-
-Displayed equations or formulas are centered and set on a separate
-line (with an extra line or halfline space above and below). Displayed
-expressions should be numbered for reference. The numbers should be
-consecutive within each section or within the contribution,
-with numbers enclosed in parentheses and set on the right margin --
-which is the default if you use the \emph{equation} environment, e.g.,
-\begin{equation}
-  \psi (u) = \int_{o}^{T} \left[\frac{1}{2}
-  \left(\Lambda_{o}^{-1} u,u\right) + N^{\ast} (-u)\right] dt \;  .
-\end{equation}
-
-Equations should be punctuated in the same way as ordinary
-text but with a small space before the end punctuation mark.
-
-\subsection{Footnotes}
-
-The superscript numeral used to refer to a footnote appears in the text
-either directly after the word to be discussed or -- in relation to a
-phrase or a sentence -- following the punctuation sign (comma,
-semicolon, or period). Footnotes should appear at the bottom of
-the
-normal text area, with a line of about 2~cm set
-immediately above them.\footnote{The footnote numeral is set flush left
-and the text follows with the usual word spacing.}
-
-\subsection{Program Code}
-
-Program listings or program commands in the text are normally set in
-typewriter font, e.g., CMTT10 or Courier.
-
-\medskip
-
-\noindent
-{\it Example of a Computer Program}
-\begin{verbatim}
-program Inflation (Output)
-  {Assuming annual inflation rates of 7%, 8%, and 10%,...
-   years};
-   const
-     MaxYears = 10;
-   var
-     Year: 0..MaxYears;
-     Factor1, Factor2, Factor3: Real;
-   begin
-     Year := 0;
-     Factor1 := 1.0; Factor2 := 1.0; Factor3 := 1.0;
-     WriteLn('Year  7% 8% 10%'); WriteLn;
-     repeat
-       Year := Year + 1;
-       Factor1 := Factor1 * 1.07;
-       Factor2 := Factor2 * 1.08;
-       Factor3 := Factor3 * 1.10;
-       WriteLn(Year:5,Factor1:7:3,Factor2:7:3,Factor3:7:3)
-     until Year = MaxYears
-end.
-\end{verbatim}
-%
-\noindent
-{\small (Example from Jensen K., Wirth N. (1991) Pascal user manual and
-report. Springer, New York)}
-
-\subsection{Citations}
-
-For citations in the text please use
-square brackets and consecutive numbers: \cite{jour}, \cite{lncschap},
-\cite{proceeding1} -- provided automatically
-by \LaTeX 's \verb|\cite| \dots\verb|\bibitem| mechanism.
-
-\subsection{Page Numbering and Running Heads}
-
-There is no need to include page numbers. If your paper title is too
-long to serve as a running head, it will be shortened. Your suggestion
-as to how to shorten it would be most welcome.
-
-\section{LNCS Online}
-
-The online version of the volume will be available in LNCS Online.
-Members of institutes subscribing to the Lecture Notes in Computer
-Science series have access to all the pdfs of all the online
-publications. Non-subscribers can only read as far as the abstracts. If
-they try to go beyond this point, they are automatically asked, whether
-they would like to order the pdf, and are given instructions as to how
-to do so.
-
-Please note that, if your email address is given in your paper,
-it will also be included in the meta data of the online version.
-
-\section{BibTeX Entries}
-
-The correct BibTeX entries for the Lecture Notes in Computer Science
-volumes can be found at the following Website shortly after the
-publication of the book:
-\url{http://www.informatik.uni-trier.de/~ley/db/journals/lncs.html}
-
-\subsubsection*{Acknowledgments.} The heading should be treated as a
-subsubsection heading and should not be assigned a number.
-
-\section{The References Section}\label{references}
-
-In order to permit cross referencing within LNCS-Online, and eventually
-between different publishers and their online databases, LNCS will,
-from now on, be standardizing the format of the references. This new
-feature will increase the visibility of publications and facilitate
-academic research considerably. Please base your references on the
-examples below. References that don't adhere to this style will be
-reformatted by Springer. You should therefore check your references
-thoroughly when you receive the final pdf of your paper.
-The reference section must be complete. You may not omit references.
-Instructions as to where to find a fuller version of the references are
-not permissible.
-
-We only accept references written using the latin alphabet. If the title
-of the book you are referring to is in Russian or Chinese, then please write
-(in Russian) or (in Chinese) at the end of the transcript or translation
-of the title.
-
-The following section shows a sample reference list with entries for
-journal articles \cite{jour}, an LNCS chapter \cite{lncschap}, a book
-\cite{book}, proceedings without editors \cite{proceeding1} and
-\cite{proceeding2}, as well as a URL \cite{url}.
-Please note that proceedings published in LNCS are not cited with their
-full titles, but with their acronyms!
-
-\begin{thebibliography}{4}
-
-\bibitem{jour} Smith, T.F., Waterman, M.S.: Identification of Common Molecular
-Subsequences. J. Mol. Biol. 147, 195--197 (1981)
-
-\bibitem{lncschap} May, P., Ehrlich, H.C., Steinke, T.: ZIB Structure Prediction Pipeline:
-Composing a Complex Biological Workflow through Web Services. In: Nagel,
-W.E., Walter, W.V., Lehner, W. (eds.) Euro-Par 2006. LNCS, vol. 4128,
-pp. 1148--1158. Springer, Heidelberg (2006)
-
-\bibitem{book} Foster, I., Kesselman, C.: The Grid: Blueprint for a New Computing
-Infrastructure. Morgan Kaufmann, San Francisco (1999)
-
-\bibitem{proceeding1} Czajkowski, K., Fitzgerald, S., Foster, I., Kesselman, C.: Grid
-Information Services for Distributed Resource Sharing. In: 10th IEEE
-International Symposium on High Performance Distributed Computing, pp.
-181--184. IEEE Press, New York (2001)
-
-\bibitem{proceeding2} Foster, I., Kesselman, C., Nick, J., Tuecke, S.: The Physiology of the
-Grid: an Open Grid Services Architecture for Distributed Systems
-Integration. Technical report, Global Grid Forum (2002)
-
-\bibitem{url} National Center for Biotechnology Information, \url{http://www.ncbi.nlm.nih.gov}
-
-\end{thebibliography}
-
-
-\section*{Appendix: Springer-Author Discount}
-
-LNCS authors are entitled to a 33.3\% discount off all Springer
-publications. Before placing an order, the author should send an email, 
-giving full details of his or her Springer publication,
-to \url{orders-HD-individuals@springer.com} to obtain a so-called token. This token is a
-number, which must be entered when placing an order via the Internet, in
-order to obtain the discount.
-
-\section{Checklist of Items to be Sent to Volume Editors}
-Here is a checklist of everything the volume editor requires from you:
-
+\subsection{Constraints}
 
 \begin{itemize}
-\settowidth{\leftmargin}{{\Large$\square$}}\advance\leftmargin\labelsep
-\itemsep8pt\relax
-\renewcommand\labelitemi{{\lower1.5pt\hbox{\Large$\square$}}}
-
-\item The final \LaTeX{} source files
-\item A final PDF file
-\item A copyright form, signed by one author on behalf of all of the
-authors of the paper.
-\item A readme giving the name and email address of the
-corresponding author.
+\item Only T speakers can be chosen (the sum of the decision variables has to match T).
+\item There has to be the same number of male and female speakers (the scalar product of Gen and Invited has to be 0)
+\item All invited speakers must come from different countries (If I[x] and I[y] are both 1, Countries[x] and Countries[y] must be different)
+\item The travel and accommodation expenses (the scalar product of Desloc and Invited + (the scalar product of Aloj and Invited) * Night Price) must be paid with the budget ($<=$ budget).
 \end{itemize}
+
+\subsection{Evaluation Function}
+
+Since we aim to find the maximum distance amongst topics, we calculate the sum of distances between the topics of all invited speakers (Invited is boolean, Distance is $>=$ 0).\\
+
+$\sum_{i=1}^{T} Invited_i{ \sum_{j=i}^{T} Invited_j * Distance_{ij} }$ 
+
+\subsection{Search Strategy}
+
+We used maximize(Total) in labeling, in order to find the set of invited speakers that maximizes the function described above (Total is the result of this function).
+
+\section{Solution Presentation}
+The predicate we use to display the result is shown below as well as the output.
+
+\begin{verbatim}
+printResult([], _, _, _, _, _, _, _).
+
+printResult([0|Is], [_|Ss], [_|Ts], [_|Cs], [_|Gs], [_|Ds], [_|As], DPrice) :-
+        printResult(Is, Ss, Ts, Cs, Gs, Ds, As, DPrice).
+
+printResult([1|Is], [S1|Ss], [T1|Ts], [C1|Cs], [G1|Gs], [D1|Ds], [A1|As], DPrice) :-
+        nome(S1, Nome),
+        pais(C1, Pais),
+        genero(G1, Genero),
+        topic(T1, Topic),
+        Aloj is A1 * DPrice,
+        write(Nome), write(' - '), write(Genero), write(' - '), write(Pais),
+        write(' - '), write(Topic), write(' - '), write(D1), write(' - '), 
+        write(Aloj), nl,
+        printResult(Is, Ss, Ts, Cs, Gs, Ds, As, DPrice).
+
+
+Result:
+Time: 40
+Resumptions: 40829
+Entailments: 33828
+Prunings: 36070
+Backtracks: 157
+Constraints created: 642
+Topics distance: 10
+Despesa alojamento: 3*100
+Despesa deslocamento: 1700
+Akemi - Male - Japao - Artificial Intelligence - 900 - 200
+Seo-yun - Female - Coreio do Sul - Programming Sensors - 800 - 100
+\end{verbatim}
+
+The \textbf{printResult} receives 8 arguments, Invited, Speakers, Topics, Countries, Gen, Desloc and Aloj arrays and the price per accommodation day. The predicate will then go through the Invited array and every time it's set to 1, it searches the database for the name, topic, country, gender, trip and accommodation values of that respective speaker according to the index received in the respective arrays.
+
+We also display the statistics by using the \textbf{fd\_statistics} predicate.
+
+\section{Results}
+We ran the application eight times to study the relation between the execution time, resumptions, entailments, prunings, backtracks and the number of lectures. Throughout the eight executions, the number of possible speakers was 20. 
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=10.9cm,height=3.8cm]{Table1}
+\caption{Time, Resumptions, Entailments, Prunings and Backtracks depending on the number of lectures.}
+\label{fig:Table1}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=11.5cm,height=7cm]{Graph1}
+\caption{Resumptions, Entailments and Pruning Graph.}
+\label{fig:Graph1}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=11.5cm,height=7cm]{Backtracks}
+\caption{Backtracks Graph.}
+\label{fig:Backtracks}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=11.5cm,height=7cm]{Time}
+\caption{Time Graph.}
+\label{fig:Time Graph}
+\end{figure}
+
+\clearpage
+As we can see, all graphs have a similar distribution. The program finishes execution in less than a second when the number of lectures are  2, 4, 6, 12, 14 or 16. However, when the number of lectures are 8 or 10, the program takes more than one second to execute. This behavior was already predicted and it can be easily explained with the Pascal's Triangle. The number of possible solutions increases the closest the number of lectures is to the average. Therefore, to maximize the solution, it is necessary to process more possibilities, which takes more time.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=4cm,height=3cm]{Pascal}
+\caption{Pascal Triangle example from 1 to 5 number of lectures.}
+\label{fig:Pascal Triangle}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=9cm,height=6cm]{Constraints}
+\caption{Number of constraints depending on the number of available speakers.}
+\label{fig:Constraints}
+\end{figure}
+
+As seen above, the number of constraints follows a quadratic distribution depending on the number of available speakers. Although most restrictions follow a linear evolution curve, the country restriction follows a quadratic one. For every possible pair of possible speakers, we need to force them to have different countries, therefore adding one speaker to the database implies adding N more country restrictions, N being the number of available speakers.
+
+\section{Conclusions and Future Work}
+This project was essential to better understand the mechanism behind logic programming with restrictions taught in the PLOG subject, since we were able to apply the concepts to the project. We learned that it is possible to solve complex problems with few lines of code using PLR and with great abstraction.
+
+The results were very satisfactory since the program was able to solve a problem with some complexity in a short amount of time.
+
+The project is well built and we don't think there's a lot of significant improvements. However, the country restrictions are significantly increasing the executing time since they follow a quadratic distribution. We weren't able to implement an algorithm to solve these restrictions with a linear complexity, but it's definitely one feature to improve, if possible.
+
+\begin{thebibliography}{4}
+	
+	\bibitem{url} SICStus Prolog, \url{https://sicstus.sics.se/}
+	
+\end{thebibliography}  
+
+\clearpage
+\section{Anexo}
+
+\subsection{source.pl}
+\begin{verbatim}
+:-include('Database.pl').
+:-use_module(library(clpfd)).
+:-use_module(library(lists)).
+:-set_prolog_flag(toplevel_print_options,
+                  [quoted(true), portrayed(true), max_depth(0)]).
+
+
+invited(Invited,NPalestras, NDias):-
+        createSpeakerArrays(Speakers, Topics, Countries, Gen, Desloc, Aloj),
+        createProximityMatrix(Topics, Dists),
+        length(Speakers, Len),
+        length(Invited, Len),
+        domain(Invited,0,1),
+        night(DPrice),
+        calcDiasAloj(Aloj, NDias, DiasAloj),
+        scalar_product(Desloc,Invited,#=,AllDesloc),
+        scalar_product(DiasAloj,Invited,#=,AllAloj),
+        budget(Budget),
+        (AllDesloc + (AllAloj * DPrice)) #=< Budget,
+        SumLen is Len-1,
+        length(Sums,SumLen),
+        calcDist(Invited,Dists,Sums),
+        sum(Sums,#=,Total),
+        scalar_product(Gen,Invited,#=,0),
+        sum(Invited,#=,NPalestras),
+        alldif1(Invited,Countries),
+        statistics(walltime,_),
+        labeling([maximize(Total)], Invited),
+        statistics(walltime,[_,T]),
+        write('Time: '), write(T), nl,
+        fd_statistics,
+        write('Topics distance: '), write(Total),nl,
+        write('Despesa alojamento: '), write(AllAloj * DPrice),nl,
+        write('Despesa deslocamento: '), write(AllDesloc), nl,
+        printResult(Invited, Speakers, Topics, Countries, Gen, Desloc, DiasAloj, DPrice).
+
+createProximityMatrix([], []).
+createProximityMatrix([T1|Ts], [D1|Ds]) :-
+        getDistLine(T1, Ts, D1),
+        createProximityMatrix(Ts,Ds).
+
+getDistLine(_, [], []).
+getDistLine(T2, [T1|Ts], [D1|Ds]) :-
+       distance(T2, T1, D1),
+       getDistLine(T2, Ts, Ds).
+
+printResult([], _, _, _, _, _, _, _).
+
+printResult([0|Is], [_|Ss], [_|Ts], [_|Cs], [_|Gs], [_|Ds], [_|As], DPrice) :-
+        printResult(Is, Ss, Ts, Cs, Gs, Ds, As, DPrice).
+
+printResult([1|Is], [S1|Ss], [T1|Ts], [C1|Cs], [G1|Gs], [D1|Ds], [A1|As], DPrice) :-
+        nome(S1, Nome),
+        pais(C1, Pais),
+        genero(G1, Genero),
+        topic(T1, Topic),
+        Aloj is A1 * DPrice,
+        write(Nome), write(' - '), write(Genero), write(' - '), write(Pais),
+        write(' - '), write(Topic), write(' - '), write(D1), write(' - '), 
+        write(Aloj), nl,
+        printResult(Is, Ss, Ts, Cs, Gs, Ds, As, DPrice).
+        
+createSpeakerArrays(Speakers, Topics, Countries, Gen, Desloc, Aloj) :-
+        findall(Speaker, speaker(Speaker,_,_,_,_,_), Speakers),
+        findall(Topic, speaker(_,_,Topic,_,_,_), Topics),
+        findall(Country, speaker(_,_,_,Country,_,_), Countries),
+        findall(Gender, speaker(_,Gender,_,_,_,_), Gen),
+        findall(D, speaker(_,_,_,_,D,_), Desloc),
+        findall(A, speaker(_,_,_,_,_,A), Aloj).
+
+calcDiasAloj([],_,[]).
+calcDiasAloj([A1|As], NDias, [D1|Ds]) :-
+        (A1 #= 1) #=> D1 #= NDias,
+        (A1 #= 2) #=> D1 #= 1,
+        calcDiasAloj(As, NDias, Ds).
+
+calcDist(_,[[]|_],_).
+
+calcDist([I1|Is],[D1|Ds],[S1|Ss]):-
+        scalar_product(D1,Is,#=,Sum),
+        S1 #= Sum * I1,
+        calcDist(Is,Ds,Ss).
+
+
+alldif1([],[]).
+alldif1([Inv|RInv],[Country|RCountries]):-
+        alldif1_aux(Inv,RInv,Country,RCountries),
+        alldif1(RInv,RCountries).
+
+alldif1_aux(_,[],_,[]).
+alldif1_aux(Inv,[Inv2|RInv],Country,[Country2|RCountries]):-
+        (Inv#=1 #/\ Inv2#=1) #=> (Country #\= Country2),
+         alldif1_aux(Inv,RInv,Country,RCountries).
+\end{verbatim}
+
+
+\subsection{Database.pl}
+\begin{verbatim}
+distance(X, X, 0).
+
+distance(1, 2, 1).
+distance(1, 3, 10).
+distance(1, 4, 10).
+distance(1, 5, 10).
+distance(1, 6, 10).
+distance(1, 7, 10).
+distance(1, 8, 10).
+distance(1, 9, 10).
+distance(1, 10, 10).
+distance(1, 11, 1).
+distance(1, 12, 10).
+distance(1, 13, 10).
+distance(1, 14, 10).
+distance(1, 15, 10).
+distance(1, 16, 10).
+
+distance(2, 1, 1).
+distance(2, 3, 10).
+distance(2, 4, 1).
+distance(2, 5, 10).
+distance(2, 6, 10).
+distance(2, 7, 10).
+distance(2, 8, 10).
+distance(2, 9, 10).
+distance(2, 10, 10).
+distance(2, 11, 1).
+distance(2, 12, 10).
+distance(2, 13, 10).
+distance(2, 14, 10).
+distance(2, 15, 10).
+distance(2, 16, 10).
+
+distance(3, 1, 10).
+distance(3, 2, 10).
+distance(3, 4, 1).
+distance(3, 5, 10).
+distance(3, 6, 10).
+distance(3, 7, 10).
+distance(3, 8, 10).
+distance(3, 9, 10).
+distance(3, 10, 10).
+distance(3, 11, 10).
+distance(3, 12, 1).
+distance(3, 13, 10).
+distance(3, 14, 10).
+distance(3, 15, 10).
+distance(3, 16, 10).
+
+distance(4, 1, 10).
+distance(4, 2, 1).
+distance(4, 3, 1).
+distance(4, 5, 10).
+distance(4, 6, 1).
+distance(4, 7, 10).
+distance(4, 8, 1).
+distance(4, 9, 10).
+distance(4, 10, 10).
+distance(4, 11, 10).
+distance(4, 12, 10).
+distance(4, 13, 10).
+distance(4, 14, 10).
+distance(4, 15, 10).
+distance(4, 16, 10).
+
+distance(5, 1, 10).
+distance(5, 2, 10).
+distance(5, 3, 10).
+distance(5, 4, 10).
+distance(5, 6, 10).
+distance(5, 7, 10).
+distance(5, 8, 10).
+distance(5, 9, 10).
+distance(5, 10, 10).
+distance(5, 11, 10).
+distance(5, 12, 1).
+distance(5, 13, 10).
+distance(5, 14, 10).
+distance(5, 15, 10).
+distance(5, 16, 10).
+
+distance(6, 1, 10).
+distance(6, 2, 10).
+distance(6, 3, 10).
+distance(6, 4, 1).
+distance(6, 5, 10).
+distance(6, 7, 10).
+distance(6, 8, 10).
+distance(6, 9, 10).
+distance(6, 10, 1).
+distance(6, 11, 10).
+distance(6, 12, 10).
+distance(6, 13, 10).
+distance(6, 14, 10).
+distance(6, 15, 10).
+distance(6, 16, 10).
+
+distance(7, 1, 10).
+distance(7, 2, 10).
+distance(7, 3, 10).
+distance(7, 4, 10).
+distance(7, 5, 10).
+distance(7, 6, 10).
+distance(7, 8, 10).
+distance(7, 9, 10).
+distance(7, 10, 10).
+distance(7, 11, 10).
+distance(7, 12, 10).
+distance(7, 13, 10).
+distance(7, 14, 1).
+distance(7, 15, 10).
+distance(7, 16, 10).
+
+distance(8, 1, 10).
+distance(8, 2, 10).
+distance(8, 3, 10).
+distance(8, 4, 1).
+distance(8, 5, 10).
+distance(8, 6, 10).
+distance(8, 7, 10).
+distance(8, 9, 10).
+distance(8, 10, 10).
+distance(8, 11, 10).
+distance(8, 12, 10).
+distance(8, 13, 10).
+distance(8, 14, 10).
+distance(8, 15, 10).
+distance(8, 16, 10).
+
+distance(9, 1, 10).
+distance(9, 2, 10).
+distance(9, 3, 10).
+distance(9, 4, 10).
+distance(9, 5, 10).
+distance(9, 6, 10).
+distance(9, 7, 10).
+distance(9, 8, 10).
+distance(9, 10, 10).
+distance(9, 11, 10).
+distance(9, 12, 10).
+distance(9, 13, 10).
+distance(9, 14, 10).
+distance(9, 15, 1).
+distance(9, 16, 10).
+
+distance(10, 1, 10).
+distance(10, 2, 10).
+distance(10, 3, 10).
+distance(10, 4, 10).
+distance(10, 5, 10).
+distance(10, 6, 1).
+distance(10, 7, 10).
+distance(10, 8, 10).
+distance(10, 9, 10).
+distance(10, 11, 10).
+distance(10, 12, 10).
+distance(10, 13, 10).
+distance(10, 14, 10).
+distance(10, 15, 10).
+distance(10, 16, 10).
+
+distance(11, 1, 1).
+distance(11, 2, 1).
+distance(11, 3, 10).
+distance(11, 4, 10).
+distance(11, 5, 10).
+distance(11, 6, 10).
+distance(11, 7, 10).
+distance(11, 8, 10).
+distance(11, 9, 10).
+distance(11, 10, 10).
+distance(11, 12, 10).
+distance(11, 13, 10).
+distance(11, 14, 10).
+distance(11, 15, 10).
+distance(11, 16, 10).
+
+distance(12, 1, 10).
+distance(12, 2, 10).
+distance(12, 3, 1).
+distance(12, 4, 10).
+distance(12, 5, 1).
+distance(12, 6, 10).
+distance(12, 7, 10).
+distance(12, 8, 10).
+distance(12, 9, 10).
+distance(12, 10, 10).
+distance(12, 11, 10).
+distance(12, 13, 10).
+distance(12, 14, 10).
+distance(12, 15, 10).
+distance(12, 16, 10).
+
+distance(13, 1, 10).
+distance(13, 2, 10).
+distance(13, 3, 10).
+distance(13, 4, 10).
+distance(13, 5, 10).
+distance(13, 6, 10).
+distance(13, 7, 10).
+distance(13, 8, 10).
+distance(13, 9, 10).
+distance(13, 10, 10).
+distance(13, 11, 10).
+distance(13, 12, 10).
+distance(13, 14, 10).
+distance(13, 15, 10).
+distance(13, 16, 1).
+
+distance(14, 1, 10).
+distance(14, 2, 10).
+distance(14, 3, 10).
+distance(14, 4, 10).
+distance(14, 5, 10).
+distance(14, 6, 10).
+distance(14, 7, 1).
+distance(14, 8, 10).
+distance(14, 9, 10).
+distance(14, 10, 10).
+distance(14, 11, 10).
+distance(14, 12, 10).
+distance(14, 13, 10).
+distance(14, 15, 10).
+distance(14, 16, 10).
+
+distance(15, 1, 10).
+distance(15, 2, 10).
+distance(15, 3, 10).
+distance(15, 4, 10).
+distance(15, 5, 10).
+distance(15, 6, 10).
+distance(15, 7, 10).
+distance(15, 8, 10).
+distance(15, 9, 1).
+distance(15, 10, 10).
+distance(15, 11, 10).
+distance(15, 12, 10).
+distance(15, 13, 10).
+distance(15, 14, 10).
+distance(15, 16, 10).
+
+distance(16, 1, 10).
+distance(16, 2, 10).
+distance(16, 3, 10).
+distance(16, 4, 10).
+distance(16, 5, 10).
+distance(16, 6, 10).
+distance(16, 7, 1).
+distance(16, 8, 10).
+distance(16, 9, 10).
+distance(16, 10, 10).
+distance(16, 11, 10).
+distance(16, 12, 10).
+distance(16, 13, 1).
+distance(16, 14, 10).
+distance(16, 15, 10).
+
+
+night(100).
+
+budget(10000).
+
+genero(-1, 'Female').
+genero(1, 'Male').
+
+%speaker(nome, genero, topico, pais, precoviagem, preco noite/pack)
+
+speaker(1, 1, 1, 1, 200, 1).
+speaker(2, -1, 2, 1, 200, 2).
+speaker(3, 1, 3, 2, 700, 1).
+speaker(4, -1, 4, 3, 500, 1).
+speaker(5, 1, 5, 4, 100, 1).
+speaker(6, -1, 6, 5, 800, 2).
+speaker(7, 1, 7, 6, 800, 1).
+speaker(8, -1, 2, 2, 400, 1).
+speaker(9, 1, 8, 7, 400, 2).
+speaker(10, -1, 9, 8, 500, 1).
+speaker(11, 1, 10, 9, 400, 1).
+speaker(12, -1, 8, 10, 900, 2).
+speaker(13, 1, 11, 11, 600, 1).
+speaker(14, -1, 12, 12, 400, 1).
+speaker(15, 1, 13, 13, 200, 1).
+speaker(16, -1, 14, 14, 700, 2).
+speaker(17, 1, 15, 8, 1000, 2).
+speaker(18, -1, 10, 15, 500, 1).
+speaker(19, 1, 1, 10, 900, 1).
+speaker(20, -1, 16, 16, 800, 2).
+
+nome(1, 'Rui').
+nome(2, 'Sofia').
+nome(3, 'Will').
+nome(4, 'Sarra').
+nome(5, 'Pierre').
+nome(6, 'Li').
+nome(7, 'Elliot').
+nome(8, 'Emily').
+nome(9, 'Aleksander').
+nome(10, 'Aada').
+nome(11, 'Abraham').
+nome(12, 'Aiko').
+nome(13, 'Aarav').
+nome(14, 'Emma').
+nome(15, 'Omar').
+nome(16, 'Mary').
+nome(17, 'Aadolf').
+nome(18, 'Marta').
+nome(19, 'Akemi').
+nome(20, 'Seo-yun').
+
+pais(1, 'Portugal').
+pais(2, 'USA').
+pais(3, 'Tunisia').
+pais(4, 'France').
+pais(5, 'China').
+pais(6, 'Australia').
+pais(7, 'Polonia').
+pais(8, 'Finland').
+pais(9, 'Denmark').
+pais(10, 'Japao').
+pais(11, 'India').
+pais(12, 'Holanda').
+pais(13, 'Marrocos').
+pais(14, 'Africa do Sul').
+pais(15, 'Brasil').
+pais(16, 'Coreio do Sul').
+
+topic(1, 'Artificial Intelligence').
+topic(2, 'Machine Learning').
+topic(3, 'Web Security').
+topic(4, 'Virtual Reality').
+topic(5, 'Remote Access').
+topic(6, 'Cloud Hosting').
+topic(7, 'People VS Machine').
+topic(8, 'Game Desing').
+topic(9, 'Browser Compatibility').
+topic(10, 'Big Data').
+topic(11, 'Genetic Algorithm').
+topic(12, 'Biometric Tecnology').
+topic(13, 'Nanotechnology').
+topic(14, 'Intelligent Assistance').
+topic(15, 'Web: Responsive Design').
+topic(16, 'Programming Sensors').
+\end{verbatim}
+
 \end{document}

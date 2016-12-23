@@ -72,31 +72,31 @@ Oradores Convidados 1\\
 \begin{abstract}
 %The abstract should summarize the contents of the paper and should
 %contain at least 70 and at most 150 words. It should be written using the
-\emph{This project aims to find the better set of speakers for a certain conference. The goal is to maximize the difference\textit{(difference or distance?)} between topics (each speaker has a topic associated) considering some money, gender and country constraints. Since it is a Constraint Satisfaction and Optimization Problem, we used SICStus Prolog and the clp(FD) module.}
+\emph{This project aims to find the better set of speakers for a certain conference. The goal is to maximize the difference between topics (each speaker has a topic associated) considering some money, gender and country constraints. Since it is a Constraint Satisfaction and Optimization Problem, we used SICStus Prolog and the clp(FD) module.}
 \keywords{CSOP, Prolog, clpfd, clp, constraint, logic programming, optimization}
 \end{abstract}
 
 
 \section{Introduction}
 
-In the scope of the course PLOG, we were asked to implement a solution of a Constraint Satisfaction and Optimization Problem. Therefore, we chose “Invited Speakers” as subject to our project. This problem is similar to the “Production Management” problem, since we have to fulfill several constraints on the speakers’ diversity, but we need to maximize the difference\textit{(difference or distance?)} amongst topics in the conference.\\
+In the scope of the course PLOG, we were asked to implement a solution of a Constraint Satisfaction and Optimization Problem. Therefore, we chose "Invited Speakers" - it is about choosing speakers for a conference - as subject to our project. This problem is similar to the "Production Management" problem, since we have to fulfill several constraints on the speakers’ diversity, but we need to maximize the difference amongst topics in the conference.\\
 In this paper we will describe the problem in detail and its approach: decision variables (their domains and constraints), evaluation function and search strategy. In the end, we will present our solution, results and analyze them.
 
 
 \section{Problem Description}
 
-For a certain conference (that will take D days and T topics), there is the need to choose topics and speakers to talk about these topics. Each speaker has a name, a gender, a topic, a country, an travel expense and accommodation type associated.\\
+For a certain conference (that will take D days and T topics), there is the need to choose topics and speakers to talk about these topics. Each speaker has a name, a gender, a topic, a country, a travel expense and accommodation type associated.\\
 There is a budget that cannot be exceeded. This budget will be used to pay speakers’ travel and accommodation expenses. The travel expense depends on the speaker and so does the accommodation, since one can choose to stay just for one night or for all conference (D nights).\\
 Also, the speakers have to be equally distributed in gender and there cannot be two speakers coming from the same country. \\
 All pairs of topics have a defined distance. The goal is to choose the speakers that maximize this distance amongst all topics in the conference.
 
 \section{Approach}
 
-To approach\textit{(Doesn't sound good, I think a simple solve would sound better)} this problem, we create several lists with the speakers’ information. The lists Speakers, Topics, Countries, Gen, Desloc and Aloj have the information about names, topics, countries, gender, travel expense and type of accommodation of all possible speakers. We also create the list Invited, which contains the decision variables and the table of distances between all pairs of topics (Dist). The index determines the speaker in every list.
+To solve this problem, we create several lists with the speakers’ information. The lists Speakers ($>=$1), Topics ($>=$1), Countries ($>=$1), Gen (-1 if male, 1 if female), Desloc ($>=$0) and Aloj (1 or 2) have the information about names, topics, countries, gender, travel expense and type of accommodation of all possible speakers. We also create the list Invited, which contains the decision variables and the Table of Distances (integers $>=0$, that represent the difference between two topics: 0 if the topic is exactly the same and the greater the more different they are) between all pairs of topics (Dist). The index determines the speaker in every list. Speakers, Topics and Countries are indexes for dictionaries of names.
 
 \subsection{Decision Variables}
 
-In this project, the decision variables are the Boolean values for each speaker, that determines whether this is going to be chosen or not. Therefore, there are as many variables as possible speakers and their domain is Boolean (0 or 1). Ex: Invited = [I1,I2,I3], I1, I2 and I3 are the decision variables. I1 can be 1 or 0 meaning the speaker 1 is or is not going.
+In this project, the decision variables are the Boolean values for each speaker, that determines whether this is going to be chosen or not. Therefore, there are as many variables as possible speakers and their domain is Boolean (0 or 1). Ex: Invited = [I1,I2,I3], I1, I2 and I3 are the decision variables that can be 1 or 0 meaning the speaker 1, 2 or 3 are or are not going, respectively.
 
 \subsection{Constraints}
 
@@ -104,7 +104,7 @@ In this project, the decision variables are the Boolean values for each speaker,
 \item Only T speakers can be chosen (the sum of the decision variables has to match T).
 \item There has to be the same number of male and female speakers (the scalar product of Gen and Invited has to be 0)
 \item All invited speakers must come from different countries (If I[x] and I[y] are both 1, Countries[x] and Countries[y] must be different)
-\item The travel and accommodation expenses (the sum of the scalar product of Desloc and Invited + (the sum of the scalar product of Desloc and Invited \textit{(The scalar product of Desloc and Invited gives you one value, so how can it be a sum?)}) * Night Price) must be covered by the budget ($<=$ budget).
+\item The travel and accommodation expenses (the scalar product of Desloc and Invited + (the scalar product of Aloj and Invited) * Night Price) must be paid with the budget ($<=$ budget).
 \end{itemize}
 
 \subsection{Evaluation Function}
@@ -115,7 +115,7 @@ $\sum_{i=1}^{T} Invited_i{ \sum_{j=i}^{T} Invited_j * Distance_{ij} }$
 
 \subsection{Search Strategy}
 
-We used maximize(Total) in labeling, in order to find the set of invited speakers that maximizes the function described above ( Total is the result of this function).
+We used maximize(Total) in labeling, in order to find the set of invited speakers that maximizes the function described above (Total is the result of this function).
 
 \section{Solution Presentation}
 The predicate we use to display the result is shown below as well as the output.
@@ -188,7 +188,7 @@ We ran the application eight times to study the relation between the execution t
 \end{figure}
 
 \clearpage
-As we can see, all graphs have a similar distribution. The program finishes execution in less than a second when the number of lectures are  2, 4, 6, 12, 14 or 16. However, when the number of lectures are 8 or 10, the programs takes more than one second to execute. This behavior was already predicted and it can be easily explained with the Pascal's Triangle. The number of possible solutions increases the closest the number of lectures is to the average, therefore, to maximize the solution, it is necessary to process more possibilities, which takes more time.
+As we can see, all graphs have a similar distribution. The program finishes execution in less than a second when the number of lectures are  2, 4, 6, 12, 14 or 16. However, when the number of lectures are 8 or 10, the program takes more than one second to execute. This behavior was already predicted and it can be easily explained with the Pascal's Triangle. The number of possible solutions increases the closest the number of lectures is to the average. Therefore, to maximize the solution, it is necessary to process more possibilities, which takes more time.
 
 \begin{figure}[!ht]
 \centering
@@ -207,11 +207,11 @@ As we can see, all graphs have a similar distribution. The program finishes exec
 As seen above, the number of constraints follows a quadratic distribution depending on the number of available speakers. Although most restrictions follow a linear evolution curve, the country restriction follows a quadratic one. For every possible pair of possible speakers, we need to force them to have different countries, therefore adding one speaker to the database implies adding N more country restrictions, N being the number of available speakers.
 
 \section{Conclusions and Future Work}
-This project was essential to better understand the mechanism behind logic programming with restrictions taught in the PLOG subject, since we were able to apply the concepts to the project. We learned that it is possible to solve complex problems with few lines of code using PLR and with great abstraction.
+This project was essential to better understand the mechanism behind logic programming with restrictions taught in the PLOG course, since we were able to apply the concepts to the project. We learned that it is possible to solve complex problems with few lines of code using PLR and with great abstraction.
 
 The results were very satisfactory since the program was able to solve a problem with some complexity in a short amount of time.
 
-The project is well built and we don't think there's a lot of significant improvements. However, the country restrictions are significantly increasing the executing time since they follow a quadratic distribution. We weren't able to implement an algorithm to solve these restrictions with a linear complexity, but it's definitely one feature to improve, if possible.
+The project is well built and we don't think there's a lot of significant improvements. However, the country restrictions are significantly increasing the executing time since they follow a quadratic distribution. We were not able to implement an algorithm to solve these restrictions with a linear complexity, but it is definitely one feature to improve, if possible.
 
 \begin{thebibliography}{4}
 	
